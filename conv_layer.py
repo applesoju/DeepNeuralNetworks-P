@@ -6,24 +6,21 @@ from layer import Layer
 class ConvolutionalLayer(Layer):
     def __init__(self):
         super().__init__()
-        self.activation_function = None
-        self.filter = None
+        self.filter = []
 
     def compute_output(self, input_data):
         super().compute_output(input_data)
 
-        convoluted_output = self.perform_convolution(1)
-        print(convoluted_output)
+        self.outputs = self.perform_convolution()
 
-    def set_filter_and_activation_fun(self, filter_obj, act_fun):  # TODO: more than one filter
+    def set_filters(self, filter_obj):  # TODO: more than one filter
         self.filter = filter_obj
-        self.activation_function = act_fun
 
-    def perform_convolution(self, padding=0, strides=1):
+    def perform_convolution(self, padding=1, strides=1):
         input_shape = (self.inputs.shape[0], self.inputs.shape[1])
 
-        if self.activation_function is None or self.filter is None:
-            print('Layer is missing a filter and/or an activation function.')
+        if self.filter is None:
+            print('Layer is missing a filter')
             return
 
         kernel = np.flipud(np.fliplr(self.filter))
@@ -59,5 +56,4 @@ class ConvolutionalLayer(Layer):
                                                row: row + kernel.shape[1]]
                     ).sum()
 
-        self.outputs = output
-        return self.outputs
+        return output

@@ -6,7 +6,6 @@ def main():
     test = np.array([i for i in range(64)]).reshape(8, 8)
     test_cl = ConvolutionalLayer()
     kernel = np.ones((3, 3))
-    kernel[1, 1] = 1
 
     test_cl.set_filter_and_activation_fun(kernel, 5)
     test_cl.compute_output(test)
