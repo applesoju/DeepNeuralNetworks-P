@@ -1,14 +1,23 @@
 import numpy as np
+
 from conv_layer import ConvolutionalLayer
+from activ_layer import ActivationLayer
+import activ_funs as af
 
 
 def main():
     test = np.array([i for i in range(64)]).reshape(8, 8)
     test_cl = ConvolutionalLayer()
-    kernel = np.ones((3, 3))
+    test_al = ActivationLayer()
 
-    test_cl.set_filter_and_activation_fun(kernel, 5)
-    test_cl.compute_output(test)
+    kernel = np.ones((3, 3))
+    test_cl.set_filters(kernel)
+    out = test_cl.compute_output(test)
+    print(out)
+
+    test_al.set_activation_function(af.relu)
+    out = test_al.compute_output(out)
+    print(out)
 
 
 if __name__ == '__main__':
