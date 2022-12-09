@@ -6,7 +6,7 @@ from layer import Layer
 class ConvolutionalLayer(Layer):
     def __init__(self):
         super().__init__()
-        self.filter = []
+        self.filter = Nones
 
     def compute_output(self, input_data):
         super().compute_output(input_data)
