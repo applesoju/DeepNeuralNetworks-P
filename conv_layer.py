@@ -25,8 +25,10 @@ class ConvolutionalLayer(Layer):
             return
 
         kernel = np.flipud(np.fliplr(self.filter))
-        output_shape = (int(((input_shape[0] - kernel.shape[0] + 2 * padding) / strides) + 1),
-                        int(((input_shape[1] - kernel.shape[1] + 2 * padding) / strides) + 1))
+        output_shape = (
+            int(((input_shape[0] - kernel.shape[0] + 2 * padding) / strides) + 1),
+            int(((input_shape[1] - kernel.shape[1] + 2 * padding) / strides) + 1)
+        )
 
         output = np.zeros(output_shape)
 
