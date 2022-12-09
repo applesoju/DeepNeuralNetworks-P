@@ -8,7 +8,7 @@ import activ_funs as af
 
 
 def main():
-    test = np.array([i for i in range(64)]).reshape(8, 8)
+    test = np.array([i for i in range(64)]).reshape(8, 8) / 64
     test_cl = ConvolutionalLayer()
     test_al = ActivationLayer()
     test_pl = PoolingLayer()
