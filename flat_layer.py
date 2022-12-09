@@ -11,6 +11,8 @@ class FlatteningLayer(Layer):
         super().compute_output(input_data)
 
         self.outputs = self.perform_flattening()
+        return self.outputs
 
     def perform_flattening(self):
-        raise NotImplementedError
+        output = self.inputs.flatten()
+        return output
