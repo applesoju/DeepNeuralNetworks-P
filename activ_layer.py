@@ -30,4 +30,3 @@ class ActivationLayer(Layer):
                 output[i, j] = self.activation_function(elem)
 
         return output
-
