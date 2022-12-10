@@ -1,3 +1,5 @@
+import numpy as np
+
 from layer import Layer
 
 
@@ -12,5 +14,14 @@ class DropoutLayer(Layer):
         self.outputs = self.perform_dropout()
         return self.outputs
 
+    def set_propability(self, prop):
+        self.propability = prop
+
     def perform_dropout(self):
-        raise NotImplementedError
+        output = np.zeros(self.inputs.shape)
+
+        for i, _ in enumerate(output):
+            if np.random.rand() < 1 - self.propability:
+                output[i] = self.inputs[i]
+
+        return output
