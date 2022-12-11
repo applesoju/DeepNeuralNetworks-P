@@ -22,11 +22,7 @@ class ActivationLayer(Layer):
             print('Layer is missing an activation function')
             return
 
-        output = np.zeros(self.inputs.shape)
-        print(output)
-
-        for i, row in enumerate(self.inputs):
-            for j, elem in enumerate(row):
-                output[i, j] = self.activation_function(elem)
+        vectorized_af = np.vectorize(self.activation_function)
+        output = vectorized_af(self.inputs)
 
         return output

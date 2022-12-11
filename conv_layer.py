@@ -7,6 +7,7 @@ class ConvolutionalLayer(Layer):
     def __init__(self):
         super().__init__()
         self.filter = None
+        self.padding = None
 
     def compute_output(self, input_data):
         super().compute_output(input_data)
@@ -16,9 +17,11 @@ class ConvolutionalLayer(Layer):
 
     def set_filters(self, filter_obj):  # TODO: more than one filter
         self.filter = filter_obj
+        self.padding = filter_obj.shape[0] // 2
 
-    def perform_convolution(self, padding=1, strides=1):
+    def perform_convolution(self, strides=1):
         input_shape = (self.inputs.shape[0], self.inputs.shape[1])
+        padd = self.padding
 
         if self.filter is None:
             print('Layer is missing a filter')
@@ -26,20 +29,20 @@ class ConvolutionalLayer(Layer):
 
         kernel = np.flipud(np.fliplr(self.filter))
         output_shape = (
-            int(((input_shape[0] - kernel.shape[0] + 2 * padding) / strides) + 1),
-            int(((input_shape[1] - kernel.shape[1] + 2 * padding) / strides) + 1)
+            int(((input_shape[0] - kernel.shape[0] + 2 * padd) / strides) + 1),
+            int(((input_shape[1] - kernel.shape[1] + 2 * padd) / strides) + 1)
         )
 
         output = np.zeros(output_shape)
 
-        if padding == 0:
+        if padd == 0:
             output_padded = self.inputs
 
         else:
-            output_padded = np.zeros((input_shape[0] + padding * 2,
-                                      input_shape[1] + padding * 2))
+            output_padded = np.zeros((input_shape[0] + padd * 2,
+                                      input_shape[1] + padd * 2))
 
-            output_padded[int(padding): int(padding * -1), int(padding): int(padding * -1)] = self.inputs
+            output_padded[int(padd): int(padd * -1), int(padd): int(padd * -1)] = self.inputs
 
         for row in range(input_shape[1]):
             # if row > input_shape[1] - kernel.shape[1]:

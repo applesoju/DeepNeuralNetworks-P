@@ -6,8 +6,15 @@ class Network:
     def add(self, layer):
         self.layers.append(layer)
 
-    def train(self):
-        raise NotImplementedError
+    def train(self, input_layer):
+        input_layer = input_layer.astype('float64')
+        next_layer = input_layer / 255.0
+
+        for layer in self.layers:
+            print(next_layer.shape)
+            next_layer = layer.compute_output(next_layer)
+
+        return next_layer
 
     def classify(self, input_layer):
         raise NotImplementedError
