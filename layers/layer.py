@@ -5,3 +5,6 @@ class Layer:
 
     def compute_output(self, inputs):
         self.inputs = inputs
+
+    def perform_backward_prop(self, output_err, learn_rate):
+        raise NotImplementedError
