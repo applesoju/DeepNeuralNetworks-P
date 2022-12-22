@@ -1,14 +1,15 @@
 import cv2
 import numpy as np
 
-import activ_funs as af
-from activ_layer import ActivationLayer
-from conv_layer import ConvolutionalLayer
-from dens_layer import DenseLayer
-from drop_layer import DropoutLayer
-from flat_layer import FlatteningLayer
 from network import Network
-from pool_layer import PoolingLayer
+
+from layers import activ_funs as af
+from layers.activ_layer import ActivationLayer
+from layers.conv_layer import ConvolutionalLayer
+from layers.dens_layer import DenseLayer
+from layers.drop_layer import DropoutLayer
+from layers.flat_layer import FlatteningLayer
+from layers.pool_layer import PoolingLayer
 
 POOLING_LAYER_KERNEL_SHAPE = (2, 2)
 POOLING_LAYER_STRIDES_NUMBER = 2
