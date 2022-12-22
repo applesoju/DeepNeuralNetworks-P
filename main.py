@@ -70,9 +70,9 @@ def network_test():
     ]
 
     neuron_count_in_dense = [
-        int(test_image.size / (4 ** 3)),    # 3 pooling layers with 2x2 kernels
+        int(test_image.size / (4 ** 3)),  # 3 pooling layers with 2x2 kernels
         1024,
-        4                                   # output layer
+        4  # output layer
     ]
 
     layer_list = [
@@ -136,5 +136,3 @@ def network_test():
 
 if __name__ == '__main__':
     network_test()
-
-# Images source: https://www.kaggle.com/datasets/uraninjo/augmented-alzheimer-mri-dataset
