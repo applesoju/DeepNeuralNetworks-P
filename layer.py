@@ -3,5 +3,5 @@ class Layer:
         self.inputs = None
         self.outputs = None
 
-    def compute_output(self, input_data):
-        self.inputs = input_data
+    def compute_output(self, inputs):
+        self.inputs = inputs
