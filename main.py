@@ -26,7 +26,8 @@ def layers_test():
     print(f'Convolutional:\n{out}')
 
     test_al = ActivationLayer(
-        activ_fun=af.relu
+        activ_fun=af.relu,
+        activ_fun_deriv=af.relu_prime
     )
     out = test_al.compute_output(out)
     print(f'Activation:\n{out}')
@@ -56,7 +57,7 @@ def layers_test():
     print(f'Dropout:\n{out}')
 
 
-def network_test():
+def forward_test():
     cnn = Network()
 
     test_image = cv2.imread(
@@ -81,7 +82,8 @@ def network_test():
             kernel=convo_kernel_list[0]
         ),
         ActivationLayer(
-            activ_fun=af.relu
+            activ_fun=af.relu,
+            activ_fun_deriv=af.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -91,7 +93,8 @@ def network_test():
             kernel=convo_kernel_list[1]
         ),
         ActivationLayer(
-            activ_fun=af.relu
+            activ_fun=af.relu,
+            activ_fun_deriv=af.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -101,7 +104,8 @@ def network_test():
             kernel=convo_kernel_list[2]
         ),
         ActivationLayer(
-            activ_fun=af.relu
+            activ_fun=af.relu,
+            activ_fun_deriv=af.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -113,7 +117,8 @@ def network_test():
             output_size=neuron_count_in_dense[1],
         ),
         ActivationLayer(
-            activ_fun=af.relu
+            activ_fun=af.relu,
+            activ_fun_deriv=af.relu_prime
         ),
         DropoutLayer(
             probability=0.25
@@ -123,7 +128,8 @@ def network_test():
             output_size=neuron_count_in_dense[2]
         ),
         ActivationLayer(
-            af.sigmoid
+            activ_fun=af.sigmoid,
+            activ_fun_deriv=af.sigmoid_prime
         )
     ]
 
