@@ -8,6 +8,7 @@ class DropoutLayer(Layer):
         super().__init__()
 
         self.probability = probability
+        self.mask = None
 
     def compute_output(self, input_data):
         super().compute_output(input_data)
@@ -18,8 +19,10 @@ class DropoutLayer(Layer):
     def perform_dropout(self):
         output = np.zeros(self.inputs.shape)
 
-        for i, _ in enumerate(output):
-            if np.random.rand() < 1 - self.probability:
-                output[i] = self.inputs[i]
+        self.mask = (np.random.rand(*output.shape) < self.probability) / self.probability
+        output = self.inputs * self.mask
 
         return output
+
+    def perform_backward_prop(self, output_err, learn_rate):    # TODO
+        return output_err * self.mask
