@@ -4,7 +4,7 @@ def relu(x):
     out = max(0, x)
     return out
 
-def relu_prime():
+def relu_prime(x):
     out = (x > 0) * 1
     return out
 
