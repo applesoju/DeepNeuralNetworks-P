@@ -44,5 +44,20 @@ class PoolingLayer(Layer):
                         output[x, y] = np.average(pool_slice)
 
         return output
-    def perform_backward_prop(self, output_err, learn_rate):    # TODO
-        raise NotImplementedError
+    def perform_backward_prop(self, output_err, learn_rate):
+        input_err = np.zeros(self.inputs.shape)
+        input_shape = (self.inputs.shape[0], self.inputs.shape[1])
+
+        for x in range(input_shape[0]):
+            for y in range(input_shape[1]):
+                x_start = x * self.n_strides
+                x_end = x_start + self.kernel_shape[0]
+
+                y_start = y * self.n_strides
+                y_end = y_start + self.kernel_shape[1]
+
+                pool_slice = self.inputs[x_start: x_end, y_start: y_end]
+                mask = (pool_slice == np.max(pool_slice))
+                input_err[x, y] = mask * output_err
+
+        return input_err
