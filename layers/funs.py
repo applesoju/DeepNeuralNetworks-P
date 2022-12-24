@@ -18,3 +18,9 @@ def sigmoid_prime(x):
     f = ex / (ex + 1)
     out = f * (1 - f)
     return out
+
+def mse(correct_val, predicted_val):
+    return np.mean(np.power(correct_val - predicted_val, 2))
+
+def mse_prime(correct_val, predicted_val):
+    return 2 * (predicted_val - correct_val) / correct_val.size
