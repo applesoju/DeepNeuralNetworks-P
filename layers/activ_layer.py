@@ -17,10 +17,10 @@ class ActivationLayer(Layer):
         return self.outputs
 
     def perform_activation(self):
-        vectorized_af = np.vectorize(self.activation_function)
-        output = vectorized_af(self.inputs)
+        output = self.activation_function(self.inputs)
 
         return output
 
     def perform_backward_prop(self, output_err, learn_rate):
-        return self.activation_function_deriv(self.inputs) * output_err
+        softmax = self.activation_function(self.inputs)
+        return self.activation_function_deriv(softmax) * output_err
