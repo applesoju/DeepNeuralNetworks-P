@@ -21,3 +21,21 @@ def mse(correct_val, predicted_val):
 
 def mse_prime(correct_val, predicted_val):
     return 2 * (predicted_val - correct_val) / correct_val.size
+
+def cross_entropy(x, y):
+    m = y.shape[0]
+    p = stable_softmax(x)
+
+    log_likehood = -np.log(p[range(m), y])
+    loss = np.sum(log_likehood) / m
+
+    return loss
+
+def cross_entropy_prime(x, y):
+    m = y.shape[0]
+
+    grad = stable_softmax(x)
+    grad[range(m), y] -= 1
+    grad /= m
+
+    return grad
