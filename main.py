@@ -3,7 +3,7 @@ import numpy as np
 
 from network import Network
 
-from layers import activ_funs as af
+from layers import funs
 from layers.activ_layer import ActivationLayer
 from layers.conv_layer import ConvolutionalLayer
 from layers.dens_layer import DenseLayer
@@ -26,8 +26,8 @@ def layers_test():
     print(f'Convolutional:\n{out}')
 
     test_al = ActivationLayer(
-        activ_fun=af.relu,
-        activ_fun_deriv=af.relu_prime
+        activ_fun=funs.relu,
+        activ_fun_deriv=funs.relu_prime
     )
     out = test_al.compute_output(out)
     print(f'Activation:\n{out}')
@@ -57,13 +57,18 @@ def layers_test():
     print(f'Dropout:\n{out}')
 
 
-def forward_test():
-    cnn = Network()
+def network_test():
+    cnn = Network(funs.mse, funs.mse_prime)
 
     test_image = cv2.imread(
         'images/NonDemented/26.jpg',
         cv2.IMREAD_GRAYSCALE
     )
+
+    correct_values = np.array([1.0,     # NonDemented
+                               0.0,     # VeryMildDemented
+                               0.0,     # MildDemented
+                               0.0])    # ModerateDemented
 
     convo_kernel_list = [
         np.ones((7, 7)) / 49,
@@ -82,8 +87,8 @@ def forward_test():
             kernel=convo_kernel_list[0]
         ),
         ActivationLayer(
-            activ_fun=af.relu,
-            activ_fun_deriv=af.relu_prime
+            activ_fun=funs.relu,
+            activ_fun_deriv=funs.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -93,8 +98,8 @@ def forward_test():
             kernel=convo_kernel_list[1]
         ),
         ActivationLayer(
-            activ_fun=af.relu,
-            activ_fun_deriv=af.relu_prime
+            activ_fun=funs.relu,
+            activ_fun_deriv=funs.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -104,8 +109,8 @@ def forward_test():
             kernel=convo_kernel_list[2]
         ),
         ActivationLayer(
-            activ_fun=af.relu,
-            activ_fun_deriv=af.relu_prime
+            activ_fun=funs.relu,
+            activ_fun_deriv=funs.relu_prime
         ),
         PoolingLayer(
             kernel_shape=(2, 2),
@@ -117,8 +122,8 @@ def forward_test():
             output_size=neuron_count_in_dense[1],
         ),
         ActivationLayer(
-            activ_fun=af.relu,
-            activ_fun_deriv=af.relu_prime
+            activ_fun=funs.relu,
+            activ_fun_deriv=funs.relu_prime
         ),
         DropoutLayer(
             probability=0.25
@@ -128,17 +133,18 @@ def forward_test():
             output_size=neuron_count_in_dense[2]
         ),
         ActivationLayer(
-            activ_fun=af.sigmoid,
-            activ_fun_deriv=af.sigmoid_prime
+            activ_fun=funs.sigmoid,
+            activ_fun_deriv=funs.sigmoid_prime
         )
     ]
 
     for layer in layer_list:
         cnn.add(layer)
 
-    out = cnn.train(test_image)
+    out = cnn.train(input_layer=test_image,
+                    correct_output=correct_values)
 
-    print(out)
+    # print(out)
 
 
 if __name__ == '__main__':
