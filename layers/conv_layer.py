@@ -51,5 +51,5 @@ class ConvolutionalLayer(Layer):
 
         return output
 
-    def perform_backward_prop(self, output_err, learn_rate): # TODO
+    def perform_backward_prop(self, output_err, learn_rate):  # TODO
         raise NotImplementedError

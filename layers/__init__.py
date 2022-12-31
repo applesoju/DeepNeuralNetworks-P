@@ -1,4 +1,4 @@
-__all__ = ['activ_funs',
+__all__ = ['funs.py',
            'activ_layer',
            'conv_layer',
            'dens_layer',

@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 
-from network import Network
-
 from layers import funs
 from layers.activ_layer import ActivationLayer
 from layers.conv_layer import ConvolutionalLayer
@@ -10,6 +8,7 @@ from layers.dens_layer import DenseLayer
 from layers.drop_layer import DropoutLayer
 from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import PoolingLayer
+from network import Network
 
 POOLING_LAYER_KERNEL_SHAPE = (2, 2)
 POOLING_LAYER_STRIDES_NUMBER = 2
@@ -65,10 +64,10 @@ def network_test():
         cv2.IMREAD_GRAYSCALE
     )
 
-    correct_values = np.array([1.0,     # NonDemented
-                               0.0,     # VeryMildDemented
-                               0.0,     # MildDemented
-                               0.0])    # ModerateDemented
+    correct_values = np.array([1.0,  # NonDemented
+                               0.0,  # VeryMildDemented
+                               0.0,  # MildDemented
+                               0.0])  # ModerateDemented
 
     convo_kernel_list = [
         np.ones((7, 7)) / 49,
