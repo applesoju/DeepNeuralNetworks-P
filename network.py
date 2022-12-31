@@ -12,17 +12,19 @@ class Network:
         output = input_layer / 255.0
 
         for layer in self.layers:
-            print(output.shape)
+            print(f'Layer shape: {output.shape}')
             output = layer.compute_output(output)
 
-        print(output)
+        print(f'Output layer: {output}')
 
         output_error = self.loss_prime(correct_output, output)
 
-        # for layer in self.layers[::-1]:
-        #     print(output.shape)
-        #     output = layer.perform_backward_prop()
+        print(f'Output Error: {output_error}')
 
+        for layer in self.layers[::-1]:
+            print(output_error.shape)
+
+            output_error = layer.perform_backward_prop(output_error, 0.05)
 
         return output
 
