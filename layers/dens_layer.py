@@ -26,7 +26,6 @@ class DenseLayer(Layer):
     def perform_backward_prop(self, output_err, learn_rate):
         bias_err = output_err
         input_err = np.dot(output_err, self.weights.T)
-        weight_shape = self.weights.shape
         weights_err = np.dot(self.inputs.reshape(-1, 1),
                              output_err.reshape(1, -1))
 
