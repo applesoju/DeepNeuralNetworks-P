@@ -44,12 +44,13 @@ class PoolingLayer(Layer):
                         output[x, y] = np.average(pool_slice)
 
         return output
+
     def perform_backward_prop(self, output_err, learn_rate):
         input_err = np.zeros(self.inputs.shape)
         input_shape = (self.inputs.shape[0], self.inputs.shape[1])
 
-        for x in range(input_shape[0]):
-            for y in range(input_shape[1]):
+        for x in range(output_err.shape[0]):
+            for y in range(output_err.shape[1]):
                 x_start = x * self.n_strides
                 x_end = x_start + self.kernel_shape[0]
 
@@ -58,6 +59,7 @@ class PoolingLayer(Layer):
 
                 pool_slice = self.inputs[x_start: x_end, y_start: y_end]
                 mask = (pool_slice == np.max(pool_slice))
-                input_err[x, y] = mask * output_err
+                # input_err[x, y] = mask * output_err
+                input_err[x_start: x_end, y_start: y_end] = mask * output_err[x, y]
 
         return input_err

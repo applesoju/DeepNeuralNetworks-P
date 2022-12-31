@@ -24,14 +24,12 @@ class DenseLayer(Layer):
         return output
 
     def perform_backward_prop(self, output_err, learn_rate):
-        print(self.weights.shape)
-        input_err = np.dot(output_err, self.weights.T)
-        weights_err = np.dot(
-            self.inputs.reshape(self.input_size, 1),
-            output_err.reshape(1, self.output_size)
-        )
         bias_err = output_err
-        print(weights_err.shape)
+        input_err = np.dot(output_err, self.weights.T)
+        weight_shape = self.weights.shape
+        weights_err = np.dot(self.inputs.reshape(-1, 1),
+                             output_err.reshape(1, -1))
+
         self.weights -= weights_err * learn_rate
         self.bias -= bias_err * learn_rate
 
