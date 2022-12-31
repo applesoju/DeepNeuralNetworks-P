@@ -60,7 +60,7 @@ def network_test():
     cnn = Network(funs.mse, funs.mse_prime)
 
     test_image = cv2.imread(
-        'images/NonDemented/26.jpg',
+        'images/test/NonDemented/26.jpg',
         cv2.IMREAD_GRAYSCALE
     )
 
