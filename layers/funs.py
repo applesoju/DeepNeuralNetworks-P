@@ -40,3 +40,6 @@ def mse(correct_val, predicted_val):
 
 def mse_prime(correct_val, predicted_val):
     return 2 * (predicted_val - correct_val) / correct_val.size
+
+def caterogical_cross_entropy(correct_val, predicted_val):
+    return -np.sum(predicted_val * np.log(correct_val))
