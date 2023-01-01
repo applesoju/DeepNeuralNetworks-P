@@ -15,7 +15,7 @@ class FlatteningLayer(Layer):
         return self.outputs
 
     def perform_flattening(self):
-        output = self.inputs.flatten()
+        output = self.inputs.flatten().reshape(1, -1)
         return output
 
     def perform_backward_prop(self, output_err, learn_rate):
