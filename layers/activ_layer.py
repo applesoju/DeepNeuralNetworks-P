@@ -20,5 +20,4 @@ class ActivationLayer(Layer):
         return output
 
     def perform_backward_prop(self, output_err, learn_rate):
-        softmax = self.activation_function(self.inputs)
-        return self.activation_function_deriv(softmax) * output_err
+        return self.activation_function_deriv(self.inputs) * output_err
