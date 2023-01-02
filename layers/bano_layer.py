@@ -2,7 +2,7 @@ import numpy as np
 
 from .layer import Layer
 
-class OutputLayer(Layer):   # TODO
+class BatchNormalizationLayer(Layer):   # TODO
     def __init__(self):
         super().__init__()
 

@@ -55,7 +55,7 @@ class ConvolutionalLayer(Layer):
 
         return output
 
-    def perform_backward_prop(self, output_err, learn_rate):  # TODO
+    def perform_backward_prop(self, output_err, learn_rate):
         input_shape = self.inputs.shape
         kernel_shape = self.kernel.shape
         padd = self.padding

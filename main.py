@@ -143,8 +143,10 @@ def network_test():
     out = cnn.train(input_layer=test_image,
                     correct_output=correct_values)
 
-    # print(out)
+    print(out)
 
 
 if __name__ == '__main__':
     network_test()
+
+

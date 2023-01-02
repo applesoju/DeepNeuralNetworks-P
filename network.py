@@ -8,12 +8,11 @@ class Network:
         self.layers.append(layer)
 
     def train(self, input_layer, correct_output, epochs=None, learn_rate=None):
-        input_layer = input_layer.astype('float64')
-        output = input_layer / 255.0
+        output = input_layer.astype('float64') / 255.0 - 0.5
 
         for layer in self.layers:
-            print(f'Layer shape: {output.shape}')
             output = layer.compute_output(output)
+            print(f'Layer shape: {output.shape}')
 
         print(f'Output layer: {output}')
 
@@ -26,7 +25,7 @@ class Network:
 
             output_error = layer.perform_backward_prop(output_error, 0.05)
 
-        return output
+        return output_error
 
     def classify(self, input_layer):
         raise NotImplementedError
