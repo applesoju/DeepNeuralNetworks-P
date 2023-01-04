@@ -2,7 +2,7 @@ import numpy as np
 
 
 class DenseLayer:
-    def __init__(self, input_size, n_neurons, activation, activation_prime, weights=None, bias=None):
+    def __init__(self, input_size, n_neurons, activation, activation_prime):
         # Layer input and its size
         self.input = None
         self.input_size = input_size
@@ -16,15 +16,14 @@ class DenseLayer:
         self.activation_prime = activation_prime
 
         # Weights and biases of the layer
-        self.weights = np.random.rand(input_size, n_neurons) - 0.5 if weights is not None else weights
-        self.biases = np.random.rand(1, n_neurons) - 0.5 if bias is not None else bias
+        self.weights = np.random.rand(input_size, n_neurons) - 0.5
+        self.biases = np.random.rand(1, n_neurons)
 
         # Prepare error and delta variables for backpropagation
         self.error = None
         self.delta = None
         self.delta_weights = 0
         self.delta_biases = 0
-
 
     def forward_prop(self, layer_input):
         # Dot product of input and neuron weights plus bias values
