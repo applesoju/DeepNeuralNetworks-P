@@ -1,6 +1,14 @@
 import numpy as np
 
 
+def linear(x):
+    return x
+
+
+def linear_prime(x):
+    return np.ones(x.shape)
+
+
 def relu(x):
     return np.maximum(0, x)
 
@@ -9,7 +17,7 @@ def relu_prime(x):
     return (x > 0) * 1
 
 
-def stable_softmax(x):
+def softmax(x):
     exps = np.exp(x - np.max(x))
     sums = np.sum(exps)
 
@@ -40,6 +48,7 @@ def mse(correct_val, predicted_val):
 
 def mse_prime(correct_val, predicted_val):
     return 2 * (predicted_val - correct_val) / correct_val.size
+
 
 def caterogical_cross_entropy(correct_val, predicted_val):
     return -np.sum(predicted_val * np.log(correct_val))
