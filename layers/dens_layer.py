@@ -2,7 +2,7 @@ import numpy as np
 
 
 class DenseLayer:
-    def __init__(self, input_size, n_neurons, activation, activation_prime):
+    def __init__(self, input_size, n_neurons, activation, activation_deriv):
         # Layer input and its size
         self.input = None
         self.input_size = input_size
@@ -13,7 +13,7 @@ class DenseLayer:
 
         # Layer activation function and its derivative
         self.activation = activation
-        self.activation_prime = activation_prime
+        self.activation_deriv = activation_deriv
 
         # Weights and biases of the layer
         self.weights = np.random.rand(input_size, n_neurons) - 0.5
