@@ -19,6 +19,13 @@ class DenseLayer:
         self.weights = np.random.rand(input_size, n_neurons) - 0.5 if weights is not None else weights
         self.biases = np.random.rand(1, n_neurons) - 0.5 if bias is not None else bias
 
+        # Prepare error and delta variables for backpropagation
+        self.error = None
+        self.delta = None
+        self.delta_weights = 0
+        self.delta_biases = 0
+
+
     def forward_prop(self, layer_input):
         # Dot product of input and neuron weights plus bias values
         dense_output = np.dot(layer_input, self.weights) + self.biases
@@ -28,4 +35,10 @@ class DenseLayer:
         return activated_output
 
     def backward_prop(self, next_layer):
-        raise NotImplementedError
+        # Compute error from downstream and determine this layers delta term
+        self.error = np.dot(next_layer.weights, next_layer.delta)
+        self.delta = self.error * self.activation_prime(self.output)
+
+        # Determine delta terms for weights and biases
+        self.delta_weights += self.delta * np.atleast_2d(self.input).T
+        self.delta_biases += self.delta
