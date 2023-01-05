@@ -1,28 +1,41 @@
 import numpy as np
 
-from .layer import Layer
+class DropoutLayer:
+    def __init__(self, input_size, probability):
+        # Layer input and its size
+        self.input = None
+        self.input_size = input_size
 
-
-class DropoutLayer(Layer):
-    def __init__(self, probability):
-        super().__init__()
-
+        # Probability of deactivating a neuron
         self.probability = probability
-        self.mask = None
 
-    def compute_output(self, input_data):
-        super().compute_output(input_data)
+        # Layer output and the number of neurons in the layer (size of the output)
+        self.output = None
+        self.output_size = input_size
 
-        self.outputs = self.perform_dropout()
-        return self.outputs
+        # Prepare error and delta variables for backpropagation
+        self.error = None
+        self.delta = None
+        self.delta_weights = 0
+        self.delta_biases = 0
 
-    def perform_dropout(self):
-        output = np.zeros(self.inputs.shape)
+    def forward_prop(self, layer_input, training=True):
+        self.input = layer_input
+        self.output = layer_input
 
-        self.mask = (np.random.rand(*output.shape) > self.probability) / self.probability
-        output = self.inputs * self.mask
+        if training:
+            # Choose neurons to deactivate
+            amount_to_deactivate = int(self.probability * self.input_size)
+            chosen_neurons = np.random.choice(self.input_size,
+                                              amount_to_deactivate,
+                                              replace=False)
+            # Perform dropout
+            self.output[chosen_neurons] = 0
 
-        return output
+            return self.output
 
-    def perform_backward_prop(self, output_err, learn_rate):
-        return output_err * self.mask
+        self.output = layer_input / self.probability
+        return self.output
+
+    def backward_prop(self, next_layer):
+        raise NotImplementedError
