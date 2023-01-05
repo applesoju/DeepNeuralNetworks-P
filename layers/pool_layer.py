@@ -1,65 +1,49 @@
 import numpy as np
 
-from .layer import Layer
 
+class MaxPoolingLayer:
+    def __init__(self, input_shape):
+        # Layer input and its size
+        self.input = None
+        self.input_shape = input_shape
 
-class PoolingLayer(Layer):
-    def __init__(self, kernel_shape, n_strides, method='max'):
-        super().__init__()
+        # Shape of the kernel used in pooling
+        self.kernel_shape = (2, 2)
 
-        self.kernel_shape = kernel_shape
-        self.n_strides = n_strides
-        self.method = method
+        # Layer output and its size
+        self.output_shape = (input_shape[0] // self.kernel_shape[0],
+                             input_shape[1] // self.kernel_shape[1],
+                             input_shape[2])
+        self.output = np.zeros(self.output_shape)
 
-    def compute_output(self, inputs):
-        super().compute_output(inputs)
+        # Prepare delta variable for backpropagation
+        self.delta = None
 
-        self.outputs = self.perform_pooling()
-        return self.outputs
+    def forward_prop(self, layer_input):
+        self.input = layer_input
 
-    def perform_pooling(self):
-        input_shape = (self.inputs.shape[0], self.inputs.shape[1])
+        row_range = range(0, self.input_shape[0], self.kernel_shape[0])
+        col_range = range(0, self.input_shape[1], self.kernel_shape[1])
 
-        output_shape = (
-            int(1 + (input_shape[0] - self.kernel_shape[0]) / self.n_strides),
-            int(1 + (input_shape[1] - self.kernel_shape[1]) / self.n_strides)
-        )
+        # For each filter in layer
+        for f in range(self.input_shape[2]):
+            # For each row
+            for r in row_range:
+                r_end = r + self.kernel_shape[0]
 
-        output = np.zeros(output_shape)
+                # For each column
+                for c in col_range:
+                    c_end = c + self.kernel_shape[1]
 
-        for x in range(output_shape[0]):
-            for y in range(output_shape[1]):
-                x_start = x * self.n_strides
-                x_end = x_start + self.kernel_shape[0]
+                    # Get a chunk of the input array
+                    chunk = self.input[r: r_end, c: c_end, f]
 
-                y_start = y * self.n_strides
-                y_end = y_start + self.kernel_shape[1]
+                    # Determine output array indices and perform max-pooling
+                    output_row = r // self.kernel_shape[0]
+                    output_col = c // self.kernel_shape[1]
+                    self.output[output_row, output_col, f] = np.max(chunk)
 
-                pool_slice = self.inputs[x_start: x_end, y_start: y_end]
+        return self.output
 
-                match self.method:
-                    case 'max':
-                        output[x, y] = np.max(pool_slice)
-                    case 'avg':
-                        output[x, y] = np.average(pool_slice)
-
-        return output
-
-    def perform_backward_prop(self, output_err, learn_rate):
-        input_err = np.zeros(self.inputs.shape)
-        input_shape = (self.inputs.shape[0], self.inputs.shape[1])
-
-        for x in range(output_err.shape[0]):
-            for y in range(output_err.shape[1]):
-                x_start = x * self.n_strides
-                x_end = x_start + self.kernel_shape[0]
-
-                y_start = y * self.n_strides
-                y_end = y_start + self.kernel_shape[1]
-
-                pool_slice = self.inputs[x_start: x_end, y_start: y_end]
-                mask = (pool_slice == np.max(pool_slice))
-                # input_err[x, y] = mask * output_err
-                input_err[x_start: x_end, y_start: y_end] = mask * output_err[x, y]
-
-        return input_err
+    def backward_prop(self, next_layer):
+        raise NotImplementedError
