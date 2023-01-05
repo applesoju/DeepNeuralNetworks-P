@@ -38,4 +38,5 @@ class DropoutLayer:
         return self.output
 
     def backward_prop(self, next_layer):
-        raise NotImplementedError
+        self.delta = next_layer.delta
+        self.delta[self.output == 0] = 0
