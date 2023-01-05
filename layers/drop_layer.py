@@ -18,7 +18,7 @@ class DropoutLayer:
 
     def forward_prop(self, layer_input, training=True):
         self.input = layer_input
-        self.output = layer_input
+        self.output = np.copy(layer_input)
 
         if training:
             # Choose neurons to deactivate
