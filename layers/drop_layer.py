@@ -13,11 +13,8 @@ class DropoutLayer:
         self.output = None
         self.output_size = input_size
 
-        # Prepare error and delta variables for backpropagation
-        self.error = None
+        # Prepare delta variable for backpropagation
         self.delta = None
-        self.delta_weights = 0
-        self.delta_biases = 0
 
     def forward_prop(self, layer_input, training=True):
         self.input = layer_input
