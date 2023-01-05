@@ -27,7 +27,7 @@ class ConvolutionalLayer:
         self.output = np.zeros(self.output_shape)
 
         # Prepare delta variables for backpropagation
-        self.delta = self.delta = np.zeros(self.input_shape + (n_filters, ))
+        self.delta = np.zeros(self.input_shape + (n_filters, ))
         self.delta_weights = 0
         self.delta_biases = 0
 
@@ -69,19 +69,19 @@ class ConvolutionalLayer:
     def backward_prop(self, next_layer):    # TODO
         for f in range(self.n_filters):
             # For every row
-            for r in range(self.kernel_shape[0], self.input_shape[0]):
+            for r in range(self.kernel_shape[0], self.input_shape[0]):  # TODO: fix like in forward
                 r_start = r - self.kernel_shape[0]
 
                 # For every column
-                for c in range(self.kernel_shape[1], self.input_shape[1]):
+                for c in range(self.kernel_shape[1], self.input_shape[1]):  # TODO: fix like in forward
                     c_start = c - self.kernel_shape[1]
 
                     # Get a chunk of the input array
-                    chunk = self.input[r_start: r, c_start: c]
+                    chunk = self.input[r_start: r, c_start: c]  # TODO: fix like in forward
 
                     # Determine delta terms for weights and biases
                     self.delta_weights[:, :, f] += chunk * next_layer.delta[r_start, c_start, f]
-                    self.delta[r_start, c_start] += next_layer.delta[r_start, c_start, f] * self.weights[:, :, f]
+                    self.delta[r_start, c_start, f] += next_layer.delta[r_start, c_start, f] * self.weights[:, :, f]
 
             self.delta_biases[f] = np.sum(next_layer.delta[:, :, f])
         self.delta = self.activation_deriv(self.delta)
