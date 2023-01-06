@@ -6,7 +6,7 @@ from layers import funs
 from layers.conv_layer import ConvolutionalLayer
 from layers.dens_layer import DenseLayer
 from layers.drop_layer import DropoutLayer
-# from layers.flat_layer import FlatteningLayer
+from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
 
@@ -74,10 +74,21 @@ def pool_forward_test(test_input=None):
 
     return test_output
 
+def flat_forward_test(test_input=None):
+    test_input = np.random.random((5, 5)) if test_input is None else test_input
+    test_input = np.atleast_3d(test_input)
 
+    flat = FlatteningLayer(input_shape=test_input.shape)
+    test_output = flat.forward_prop(test_input)
+
+    print(f'Input:\n{test_input}')
+    print(f'Output:\n {test_output}')
+
+    return test_output
 
 if __name__ == '__main__':
     # dense_forward_test()
     # out = convo_forward_test()
-    drop_forward_test()
+    # drop_forward_test()
     # pool_forward_test(out)
+    flat_forward_test()
