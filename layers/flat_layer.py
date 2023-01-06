@@ -16,7 +16,7 @@ class FlatteningLayer:
 
     def forward_prop(self, layer_input):
         self.input = layer_input
-        self.output = np.array(self.input).flatten()
+        self.output = self.input.flatten()
 
         return self.output
 

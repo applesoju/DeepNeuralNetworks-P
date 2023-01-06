@@ -2,12 +2,12 @@ import numpy as np
 
 
 class DenseLayer:
-    def __init__(self, input_size, n_neurons, activation, activation_deriv):
-        # Layer input and its size
+    def __init__(self, input_shape, n_neurons, activation, activation_deriv):
+        # Layer input and its shape
         self.input = None
-        self.input_size = input_size
+        self.input_size = input_shape[1]
 
-        # Layer output and the number of neurons in the layer (size of the output)
+        # Layer output and number of neurons
         self.output = None
         self.n_neurons = n_neurons
 
@@ -16,7 +16,7 @@ class DenseLayer:
         self.activation_deriv = activation_deriv
 
         # Weights and biases of the layer
-        self.weights = np.random.rand(input_size, n_neurons) - 0.5
+        self.weights = np.random.rand(self.input_size, n_neurons) - 0.5
         self.biases = np.random.rand(1, n_neurons)
 
         # Prepare error and delta variables for backpropagation
@@ -35,7 +35,8 @@ class DenseLayer:
 
     def backward_prop(self, next_layer):
         # Compute error from downstream and determine this layers delta term
-        self.error = np.dot(next_layer.weights, next_layer.delta)
+        self.error = np.dot(np.atleast_2d(next_layer.weights),
+                            np.atleast_2d(next_layer.delta))
         self.delta = self.error * self.activation_prime(self.output)
 
         # Determine delta terms for weights and biases
