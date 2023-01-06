@@ -45,5 +45,31 @@ class MaxPoolingLayer:
 
         return self.output
 
-    def backward_prop(self, next_layer):
-        raise NotImplementedError
+    def backward_prop(self, next_layer):    # TODO: check and maybe switch for the same loop as forward_prop()
+        # For each filter in layer
+        for f in range(self.output_shape[2]):
+            # For each row
+            for r in range(self.output_shape[0]):
+                # For each column
+                for c in range(self.output_shape[1]):
+                    # Get delta from downstream
+                    delta_output = next_layer.delta[r, c, f]
+
+                    # Determine input array indices and get its chunk
+                    input_row_start = r * self.kernel_shape[0]
+                    input_row_end = input_row_start + self.kernel_shape[0]
+
+                    input_col_start = c * self.kernel_shape[1]
+                    input_col_end = input_col_start + self.kernel_shape[1]
+
+                    chunk = self.input[input_row_start: input_row_end,
+                                       input_col_start: input_col_end,
+                                       f]
+                    max_value = np.max(chunk)
+                    max_value_index = np.argwhere(chunk == max_value)[0]
+
+                    self.delta[r + max_value_index[0],
+                               c + max_value_index[1],
+                               f] = delta_output
+
+
