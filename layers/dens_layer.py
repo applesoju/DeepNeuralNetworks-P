@@ -22,8 +22,8 @@ class DenseLayer:
         # Prepare error and delta variables for backpropagation
         self.error = None
         self.delta = None
-        self.delta_weights = 0
-        self.delta_biases = 0
+        self.delta_weights = np.zeros(self.weights.shape)
+        self.delta_biases = np.zeros(self.biases.shape)
 
     def forward_prop(self, layer_input):
         self.input = layer_input
