@@ -17,6 +17,7 @@ class FlatteningLayer:
         self.output = np.array(self.input).flatten()
 
     def backward_prop(self, next_layer):
+        # Compute error from downstream and determine this layers delta term
         self.error = np.dot(next_layer.weights, next_layer.delta)
         self.delta = self.error * self.output
         self.delta = self.delta.reshape(self.input_shape)
