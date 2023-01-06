@@ -26,6 +26,8 @@ class DenseLayer:
         self.delta_biases = 0
 
     def forward_prop(self, layer_input):
+        self.input = layer_input
+
         # Dot product of input and neuron weights plus bias values
         dense_output = np.dot(layer_input, self.weights) + self.biases
         # Activate output using provided function
