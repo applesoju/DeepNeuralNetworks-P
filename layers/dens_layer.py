@@ -29,9 +29,9 @@ class DenseLayer:
         # Dot product of input and neuron weights plus bias values
         dense_output = np.dot(layer_input, self.weights) + self.biases
         # Activate output using provided function
-        activated_output = self.activation(dense_output)
+        self.output = self.activation(dense_output)
 
-        return activated_output
+        return self.output
 
     def backward_prop(self, next_layer):
         # Compute error from downstream and determine this layers delta term
