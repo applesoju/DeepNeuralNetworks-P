@@ -43,7 +43,7 @@ def sigmoid_prime(x):
 
 
 def mse(correct_val, predicted_val):
-    return np.mean(np.power(correct_val - predicted_val, 2))
+    return np.power(correct_val - predicted_val, 2)
 
 
 def mse_prime(correct_val, predicted_val):
