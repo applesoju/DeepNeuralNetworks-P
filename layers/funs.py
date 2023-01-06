@@ -20,13 +20,14 @@ def relu_prime(x):
 def softmax(x):
     exps = np.exp(x - np.max(x))
     sums = np.sum(exps)
+    out = exps / sums
+    return out
 
-    return exps / sums
 
-
-def softmax_prime(softmax_output):
-    s = softmax_output.reshape(-1, 1)
-    return np.diag(s) - s * s.T
+def softmax_prime(x):
+    soft = softmax(x)
+    out = soft * (1 - soft)
+    return out
 
 
 def sigmoid(x):
