@@ -36,10 +36,15 @@ class DenseLayer:
         return self.output
 
     def backward_prop(self, next_layer):
-        # Compute error from downstream and determine this layers delta term
-        self.error = np.dot(np.atleast_2d(next_layer.weights),
-                            np.atleast_2d(next_layer.delta))
-        self.delta = self.error * self.activation_prime(self.output)
+        # If the next layer is Dropout get just the error
+        if type(next_layer).__name__ == 'DropoutLayer':
+            self.error = next_layer.delta
+
+        # If not compute error from downstream
+        else:
+            self.error = np.dot(next_layer.weights, next_layer.delta.T).T
+        # Determine this layers delta term
+        self.delta = self.error * self.activation_deriv(self.output)
 
         # Determine delta terms for weights and biases
         self.delta_weights += self.delta * np.atleast_2d(self.input).T
