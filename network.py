@@ -1,31 +1,34 @@
 class Network:
-    def __init__(self, loss_fun, deriv_loss_fun):
+    def __init__(self):
+        # Layers and batch size
         self.layers = []
-        self.loss = loss_fun
-        self.loss_prime = deriv_loss_fun
+        self.batch_size = 0
+
+        # Learning rate and momentum
+        self.learning_rate = 0.01
+        self.momentum = 0.0001
+
+        # Loss and accuracy of training and validation sets
+        self.training_loss = {}
+        self.training_accuracy = {}
+
+        self.validation_loss = {}
+        self.validation_accuracy = {}
 
     def add(self, layer):
-        self.layers.append(layer)
+        raise NotImplementedError
 
-    def train(self, input_layer, correct_output, epochs=None, learn_rate=None):
-        output = input_layer.astype('float64') / 255.0 - 0.5
+    def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split = 0.2):
+        raise NotImplementedError
 
-        for layer in self.layers:
-            output = layer.compute_output(output)
-            print(f'Layer shape: {output.shape}')
+    def forward_propagation(self, inputs, training=True):
+        raise NotImplementedError
 
-        print(f'Output layer: {output}')
+    def categorical_cross_entropy_loss(self, correct_outputs, network_outputs):
+        raise NotImplementedError
 
-        output_error = self.loss_prime(correct_output, output)
+    def backward_propagation(self, loss, adjust_params):
+        raise NotImplementedError
 
-        print(f'Output Error: {output_error}')
-
-        for layer in self.layers[::-1]:
-            print(output_error.shape)
-
-            output_error = layer.perform_backward_prop(output_error, 0.05)
-
-        return output_error
-
-    def classify(self, input_layer):
+    def classify(self, inputs):
         raise NotImplementedError
