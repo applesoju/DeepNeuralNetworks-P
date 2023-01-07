@@ -14,7 +14,8 @@ class DropoutLayer:
         self.output = None
         self.output_shape = input_shape
 
-        # Prepare delta variable for backpropagation
+        # Prepare error and delta variables for backpropagation
+        self.error = None
         self.delta = None
 
     def forward_prop(self, layer_input, training=True):
@@ -36,5 +37,6 @@ class DropoutLayer:
         return self.output
 
     def backward_prop(self, next_layer):
-        self.delta = next_layer.delta
+        self.error = np.dot(next_layer.weights, next_layer.delta.T).T
+        self.delta = self.error * self.output
         self.delta[self.output == 0] = 0
