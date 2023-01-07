@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class DropoutLayer:
     def __init__(self, input_shape, probability):
         # Layer input and its size

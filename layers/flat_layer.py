@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class FlatteningLayer:
     def __init__(self, input_shape):
         # Layer input and its shape
