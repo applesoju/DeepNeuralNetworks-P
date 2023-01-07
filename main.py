@@ -25,17 +25,18 @@ def dense_forward_test(test_input=None, n=4, act=funs.relu, act_d=funs.relu_prim
 
     return dense
 
-def convo_forward_test(test_input=None, plot=False):
+def convo_forward_test(test_input=None, n=1, plot=False):
     test_image = cv2.imread('images/test/NonDemented/26.jpg',
                             cv2.IMREAD_GRAYSCALE) if test_input is None else test_input
     convo = ConvolutionalLayer(input_shape=test_image.shape,
-                               n_filters=4,
-                               activation=funs.relu)
+                               n_filters=n,
+                               activation=funs.relu,
+                               activation_deriv=funs.relu_prime)
     test_output = convo.forward_prop(test_image)
 
     if plot:
-        for f in range(test_output.shape[-1]):
-            plt.imshow(test_output[:, :, f])
+        for filt in range(test_output.shape[-1]):
+            plt.imshow(test_output[:, :, filt])
             plt.show()
 
     print(f'Input:\n{test_image}')
@@ -95,8 +96,9 @@ if __name__ == '__main__':
 
     print(f'\nForward propagation begins.\n')
 
-    c = convo_forward_test(normalized)
-    p = pool_forward_test(c.output)
+    c = convo_forward_test(normalized, 4)
+    cc = convo_forward_test(c.output, 4)
+    p = pool_forward_test(cc.output)
     f = flat_forward_test(p.output)
     de = dense_forward_test(f.output, 144)
     dr = drop_forward_test(de.output)
@@ -108,7 +110,7 @@ if __name__ == '__main__':
 
     print(f'MSE:\n{mse}')
 
-    layers = [c, p, f, de, dr, dede, out]
+    layers = [c, cc, p, f, de, dr, dede, out]
 
     loss = correct_values - out.output
     loss /= layers[-1].activation_deriv(out.output)
@@ -128,5 +130,11 @@ if __name__ == '__main__':
         else:
             downstream_layer = layers[i + 1]
             layer.backward_prop(downstream_layer)
+
+            if i in (0, 1):
+                for delta_ in range(layer.delta.shape[-1]):
+                    plt.imshow(layer.delta[:, :, delta_])
+                    plt.show()
+
 
         print(f'Layer {i} delta:\n{layer.delta}')
