@@ -43,9 +43,10 @@ class DenseLayer:
         # If not compute error from downstream
         else:
             self.error = np.dot(next_layer.weights, next_layer.delta.T).T
+
         # Determine this layers delta term
         self.delta = self.error * self.activation_deriv(self.output)
 
         # Determine delta terms for weights and biases
-        self.delta_weights += self.delta * np.atleast_2d(self.input).T
+        self.delta_weights += self.delta * self.input.T
         self.delta_biases += self.delta
