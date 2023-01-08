@@ -10,6 +10,9 @@ class Network:
         self.learning_rate = 0.01
         self.momentum = 0.0001
 
+        # Optimizer
+        self.optimizer = None
+
         # Loss and accuracy of training and validation sets
         self.training_loss = {}
         self.training_accuracy = {}
@@ -66,8 +69,42 @@ class Network:
         return loss, err
 
 
-    def backward_propagation(self, loss, adjust_params):
-        raise NotImplementedError
+    def reset_gradients(self):
+        for layer in self.layers:
+            try:
+                layer.delta_weights = np.zeros(layer.delta_weights.shape)
+                layer.delta_biases = np.zeros(layer.delta_biases.shape)
+
+            except AttributeError:
+                pass
+
+
+    def backward_propagation(self, loss, adjust_params):    # TODO: add comments and test
+        for i in reversed(range(len(self.layers))):
+            layer = self.layers[i]
+
+            if layer == self.layers[-1]:
+                layer.error = loss
+                layer.delta = layer.error * layer.activation_deriv(layer.output)
+
+                layer.delta_weights += layer.delta *layer.input.T
+                layer.delta_biases += layer.delta
+
+            else:
+                next_layer = self.layers[i + 1]
+                layer.backward_prop(next_layer)
+
+            if adjust_params:
+                try:
+                    layer.delta_weights /= self.batch_size
+                    layer.delta_biases /= self.batch_size
+
+                except AttributeError:
+                    pass
+
+        if adjust_params:
+            self.optimizer(self.layers)
+            self.reset_gradients()
 
     def classify(self, inputs):
         raise NotImplementedError
