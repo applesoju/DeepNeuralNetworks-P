@@ -244,4 +244,6 @@ if __name__ == '__main__':
 
     l, e = cnn.cross_entropy_loss(correct_values, output_values)
 
+    cnn.backward_propagation(l, True)
+
     print(prediction)
