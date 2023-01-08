@@ -38,7 +38,7 @@ class DenseLayer:
     def backward_prop(self, next_layer):
         # If the next layer is Dropout get just the error
         if type(next_layer).__name__ == 'DropoutLayer':
-            self.error = next_layer.delta
+            self.error = next_layer.error
 
         # If not compute error from downstream
         else:
