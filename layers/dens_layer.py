@@ -1,34 +1,52 @@
 import numpy as np
 
-from .layer import Layer
 
+class DenseLayer:
+    def __init__(self, input_shape, n_neurons, activation, activation_deriv):
+        # Layer input and its shape
+        self.input = None
+        self.input_size = input_shape[1]
 
-class DenseLayer(Layer):
-    def __init__(self, input_size, output_size):
-        super().__init__()
+        # Layer output and number of neurons
+        self.output = None
+        self.n_neurons = n_neurons
 
-        self.input_size = input_size
-        self.output_size = output_size
+        # Layer activation function and its derivative
+        self.activation = activation
+        self.activation_deriv = activation_deriv
 
-        self.weights = np.random.rand(input_size, output_size) - 0.5
-        self.bias = np.random.rand(1, output_size) - 0.5
+        # Weights and biases of the layer
+        self.weights = np.random.rand(self.input_size, n_neurons) - 0.5
+        self.biases = np.random.rand(1, n_neurons)
 
-    def compute_output(self, input_data):
-        super().compute_output(input_data)
+        # Prepare error and delta variables for backpropagation
+        self.error = None
+        self.delta = None
+        self.delta_weights = np.zeros(self.weights.shape)
+        self.delta_biases = np.zeros(self.biases.shape)
 
-        self.outputs = self.perform_forward_prop()
-        return self.outputs
+    def forward_prop(self, layer_input):
+        self.input = layer_input
 
-    def perform_forward_prop(self):
-        output = np.dot(self.inputs, self.weights) + self.bias
-        return output
+        # Dot product of input and neuron weights plus bias values
+        dense_output = np.dot(layer_input, self.weights) + self.biases
+        # Activate output using provided function
+        self.output = self.activation(dense_output)
 
-    def perform_backward_prop(self, output_err, learn_rate):
-        bias_err = output_err
-        input_err = np.dot(output_err, self.weights.T)
-        weights_err = np.dot(self.inputs.T, output_err)
+        return self.output
 
-        self.weights -= weights_err * learn_rate
-        self.bias -= bias_err * learn_rate
+    def backward_prop(self, next_layer):
+        # If the next layer is Dropout get just the error
+        if type(next_layer).__name__ == 'DropoutLayer':
+            self.error = next_layer.delta
 
-        return input_err
+        # If not compute error from downstream
+        else:
+            self.error = np.dot(next_layer.weights, next_layer.delta.T).T
+
+        # Determine this layers delta term
+        self.delta = self.error * self.activation_deriv(self.output)
+
+        # Determine delta terms for weights and biases
+        self.delta_weights += self.delta * self.input.T
+        self.delta_biases += self.delta

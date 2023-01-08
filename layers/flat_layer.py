@@ -1,22 +1,27 @@
-from .layer import Layer
+import numpy as np
 
 
-class FlatteningLayer(Layer):
-    def __init__(self):
-        super().__init__()
+class FlatteningLayer:
+    def __init__(self, input_shape):
+        # Layer input and its shape
+        self.input = None
+        self.input_shape = input_shape
 
-        self.input_shape = None
+        # Layer output
+        self.output = None
 
-    def compute_output(self, input_data):
-        super().compute_output(input_data)
+        # Prepare error and delta variables for backpropagation
+        self.error = None
+        self.delta = None
 
-        self.outputs = self.perform_flattening()
-        self.input_shape = input_data.shape
-        return self.outputs
+    def forward_prop(self, layer_input):
+        self.input = layer_input
+        self.output = self.input.flatten().reshape(1, -1)
 
-    def perform_flattening(self):
-        output = self.inputs.flatten().reshape(1, -1)
-        return output
+        return self.output
 
-    def perform_backward_prop(self, output_err, learn_rate):
-        return self.outputs.reshape(self.input_shape)
+    def backward_prop(self, next_layer):
+        # Compute error from downstream and determine this layers delta term
+        self.error = np.dot(next_layer.weights, next_layer.delta.T).T
+        self.delta = self.error * self.output
+        self.delta = self.delta.reshape(self.input_shape)

@@ -1,55 +1,92 @@
 import numpy as np
+from .funs import linear, linear_prime
 
-from .layer import Layer
 
+class ConvolutionalLayer:
+    def __init__(self, input_shape=None, n_filters=1, kernel_shape=(3, 3),
+                 activation=linear, activation_deriv=linear_prime):
+        # Layer input and its shape
+        self.input = None
+        self.input_shape = input_shape if len(input_shape) == 3 else input_shape + (1,)
 
-class ConvolutionalLayer(Layer):
-    def __init__(self, kernel, strides=1):
-        super().__init__()
+        # Number of filters used in the layer and their shape
+        self.n_filters = n_filters
+        self.kernel_shape = (kernel_shape[0], kernel_shape[1], self.input_shape[2], self.n_filters)
 
-        self.kernel = kernel
-        self.padding = kernel.shape[0] // 2
-        self.strides = strides
+        # Prepare padded input
+        self.padding = self.kernel_shape[0] // 2
+        padded_input_shape = (self.input_shape[0] + 2 * self.padding,
+                              self.input_shape[1] + 2 * self.padding,
+                              self.input_shape[2])
+        self.padded_input = np.zeros(padded_input_shape)
 
-    def compute_output(self, input_data):
-        super().compute_output(input_data)
+        # Initialization of filters and biases using normal distribution
+        standard_dev = 1 / np.sqrt(np.prod(self.kernel_shape))
+        self.weights = np.random.normal(0, standard_dev, self.kernel_shape)
+        self.biases = np.random.randn(n_filters)
 
-        self.outputs = self.perform_convolution()
-        return self.outputs
+        # Layer activation function and its derivative
+        self.activation = activation
+        self.activation_deriv = activation_deriv
 
-    def perform_convolution(self):
-        input_shape = (self.inputs.shape[0], self.inputs.shape[1])
-        padd = self.padding
-        strides = self.strides
+        # Layer output and its shape assuming zero padding and (1, 1) strides
+        self.output_shape = (self.input_shape[0], self.input_shape[1], n_filters)
+        self.output = np.zeros(self.output_shape)
 
-        kernel = np.flipud(np.fliplr(self.kernel))
-        output_shape = (
-            int(((input_shape[0] - kernel.shape[0] + 2 * padd) / strides) + 1),
-            int(((input_shape[1] - kernel.shape[1] + 2 * padd) / strides) + 1)
-        )
+        # Prepare delta variables for backpropagation
+        self.delta = None
+        self.delta_weights = np.zeros(self.weights.shape)
+        self.delta_biases = np.zeros(self.biases.shape)
 
-        output = np.zeros(output_shape)
+    def forward_prop(self, layer_input):
+        self.input = np.atleast_3d(layer_input)
 
-        if padd == 0:
-            output_padded = self.inputs
+        # Apply zero padding
+        self.padded_input[self.padding: -self.padding,
+        self.padding: -self.padding] = self.input
 
-        else:
-            output_padded = np.zeros((input_shape[0] + padd * 2,
-                                      input_shape[1] + padd * 2))
+        # For each filter in layer
+        for f in range(self.n_filters):
+            # For each row
+            for r in range(self.input_shape[0]):
+                r_end = r + self.kernel_shape[0]
 
-            output_padded[int(padd): int(padd * -1), int(padd): int(padd * -1)] = self.inputs
+                # For each column
+                for c in range(self.input_shape[1]):
+                    c_end = c + self.kernel_shape[1]
 
-        for row in range(input_shape[1]):
-            if row % strides != 0:
-                continue
+                    # Get a chunk of the padded input array
+                    chunk = self.padded_input[r: r_end, c: c_end]
 
-            for col in range(input_shape[0]):
-                if col % strides == 0:
-                    output[col, row] = (
-                            kernel * output_padded[col: col + kernel.shape[0], row: row + kernel.shape[1]]
-                    ).sum()
+                    # Perform convolution
+                    convolution_output = (chunk * self.weights[:, :, :, f]).sum() + self.biases[f]
+                    self.output[r, c, f] = convolution_output
 
-        return output
+        # Activate outputs
+        self.output = self.activation(self.output)
 
-    def perform_backward_prop(self, output_err, learn_rate):  # TODO
-        raise NotImplementedError
+        return self.output
+
+    def backward_prop(self, next_layer):
+        self.delta = np.zeros(self.output_shape)
+
+        # For every filter
+        for f in range(self.n_filters):
+            # For every row
+            for r in range(self.kernel_shape[0], self.input_shape[0] + 1):
+                r_start = r - self.kernel_shape[0]
+
+                # For every column
+                for c in range(self.kernel_shape[1], self.input_shape[1] + 1):
+                    c_start = c - self.kernel_shape[1]
+
+                    # Get a chunk of the input array
+                    chunk = self.input[r_start: r, c_start: c]
+
+                    # Determine delta terms for weights and biases
+                    self.delta_weights[:, :, :, f] += chunk * next_layer.delta[r_start, c_start, f]
+                    self.delta[r_start: r, c_start: c] += \
+                        next_layer.delta[r_start, c_start, f] * self.weights[:, :, :, f]
+
+            self.delta_biases[f] = np.sum(next_layer.delta[:, :, f])
+        self.delta = self.activation_deriv(self.delta)
