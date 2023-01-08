@@ -9,23 +9,24 @@ from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
 
+
 def dense_forward_test(test_input=None, n=4, act=funs.relu, act_d=funs.relu_prime):
     test_input = np.random.rand(8) if test_input is None else test_input
+
     dense = DenseLayer(input_shape=test_input.shape,
                        n_neurons=n,
                        activation=act,
                        activation_deriv=act_d)
+
     test_output = dense.forward_prop(test_input)
 
-
-if __name__ == '__main__':
-    # network_test()
-    print(f'Input:\n{test_input}')
+    print(f'Input:\n{test_image}')
     print(f'Weights:\n{dense.weights}')
     print(f'Biases:\n{dense.biases}')
     print(f'Output:\n {test_output}')
 
     return dense
+
 
 def convo_forward_test(test_input=None, n=1, plot=False):
     test_image = cv2.imread('images/test/NonDemented/26.jpg',
@@ -48,6 +49,7 @@ def convo_forward_test(test_input=None, n=1, plot=False):
 
     return convo
 
+
 def drop_forward_test(test_input=None):
     test_input = np.random.random((1, 20)) if test_input is None else test_input
     drop = DropoutLayer(test_input.shape,
@@ -60,6 +62,7 @@ def drop_forward_test(test_input=None):
     print(f'Difference:\n {difference}')
 
     return drop
+
 
 def pool_forward_test(test_input=None, plot=False):
     test_image = cv2.imread('images/test/NonDemented/26.jpg',
@@ -79,6 +82,7 @@ def pool_forward_test(test_input=None, plot=False):
 
     return pool
 
+
 def flat_forward_test(test_input=None):
     test_input = np.random.random((5, 5)) if test_input is None else test_input
     test_input = np.atleast_3d(test_input)
@@ -90,6 +94,7 @@ def flat_forward_test(test_input=None):
     print(f'Output:\n{test_output}')
 
     return flat
+
 
 if __name__ == '__main__':
     # img = cv2.imread('images/test/NonDemented/26.jpg', cv2.IMREAD_GRAYSCALE)
@@ -239,7 +244,4 @@ if __name__ == '__main__':
 
     l, e = cnn.cross_entropy_loss(correct_values, output_values)
 
-
-
     print(prediction)
-
