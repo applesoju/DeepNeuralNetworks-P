@@ -90,51 +90,154 @@ def flat_forward_test(test_input=None):
     return flat
 
 if __name__ == '__main__':
+    # img = cv2.imread('images/test/NonDemented/26.jpg', cv2.IMREAD_GRAYSCALE)
+    #
+    # normalized = (img - img.mean())/img.std()
+    #
+    # print(f'\nForward propagation begins.\n')
+    #
+    # c = convo_forward_test(normalized, 4)
+    # cc = convo_forward_test(c.output, 4)
+    # p = pool_forward_test(cc.output)
+    # f = flat_forward_test(p.output)
+    # de = dense_forward_test(f.output, 144)
+    # dr = drop_forward_test(de.output)
+    # dede = dense_forward_test(dr.output, 12)
+    # out = dense_forward_test(dede.output, 4, funs.softmax, funs.softmax_prime)
+    #
+    # correct_values = np.array([1.0, 0.0, 0.0, 0.0]).reshape(1, -1)
+    # mse = funs.mse(correct_values, out.output)
+    #
+    # print(f'MSE:\n{mse}')
+    #
+    # layers = [c, cc, p, f, de, dr, dede, out]
+    #
+    # loss = correct_values - out.output
+    # loss /= layers[-1].activation_deriv(out.output)
+    #
+    # print(f'\nBackward propagation begins.\n')
+    #
+    # for i in reversed(range(len(layers))):
+    #     layer = layers[i]
+    #
+    #     if layer == layers[-1]:
+    #         layer.error = loss
+    #         layer.delta = layer.error * layer.activation_deriv(layer.output)
+    #
+    #         layer.delta_weights += layer.delta * np.atleast_2d(layer.input).T
+    #         layer.delta_biases += layer.delta
+    #
+    #     else:
+    #         downstream_layer = layers[i + 1]
+    #         layer.backward_prop(downstream_layer)
+    #
+    #         if i in (0, 1):
+    #             for delta_ in range(layer.delta.shape[-1]):
+    #                 plt.imshow(layer.delta[:, :, delta_])
+    #                 plt.show()
+    #
+    #
+    #     print(f'Layer {i} delta:\n{layer.delta}')
+
     img = cv2.imread('images/test/NonDemented/26.jpg', cv2.IMREAD_GRAYSCALE)
 
-    normalized = (img - img.mean())/img.std()
+    correct_values = np.array([1.0, 0.0, 0.0, 0.0])
 
-    print(f'\nForward propagation begins.\n')
+    layer_list = [
+        # Convolutional, 7x7, 16 filters, ReLU
+        ConvolutionalLayer(input_shape=(208, 176),
+                           n_filters=16,
+                           kernel_shape=(7, 7),
+                           activation=funs.relu,
+                           activation_deriv=funs.relu_prime),
 
-    c = convo_forward_test(normalized, 4)
-    cc = convo_forward_test(c.output, 4)
-    p = pool_forward_test(cc.output)
-    f = flat_forward_test(p.output)
-    de = dense_forward_test(f.output, 144)
-    dr = drop_forward_test(de.output)
-    dede = dense_forward_test(dr.output, 12)
-    out = dense_forward_test(dede.output, 4, funs.softmax, funs.softmax_prime)
+        # Max Pooling, 2x2
+        MaxPoolingLayer(input_shape=(208, 176, 16)),
 
-    correct_values = np.array([1.0, 0.0, 0.0, 0.0]).reshape(1, -1)
-    mse = funs.mse(correct_values, out.output)
+        # Convolutional, 5x5, 16 filters, ReLU
+        ConvolutionalLayer(input_shape=(104, 88, 16),
+                           n_filters=16,
+                           kernel_shape=(5, 5),
+                           activation=funs.relu,
+                           activation_deriv=funs.relu_prime),
 
-    print(f'MSE:\n{mse}')
+        # Max Pooling 2x2
+        MaxPoolingLayer(input_shape=(104, 88, 16)),
 
-    layers = [c, cc, p, f, de, dr, dede, out]
+        # Convolutional, 3x3, 8 filters, ReLU
+        ConvolutionalLayer(input_shape=(52, 44, 16),
+                           n_filters=8,
+                           kernel_shape=(3, 3),
+                           activation=funs.relu,
+                           activation_deriv=funs.relu_prime),
 
-    loss = correct_values - out.output
-    loss /= layers[-1].activation_deriv(out.output)
+        # Max Pooling 2x2
+        MaxPoolingLayer(input_shape=(52, 44, 8)),
 
-    print(f'\nBackward propagation begins.\n')
+        # Flattening to (1, n)
+        FlatteningLayer(input_shape=(26, 22, 8)),
 
-    for i in reversed(range(len(layers))):
-        layer = layers[i]
+        # Dense, 1024, ReLU
+        DenseLayer(input_shape=(1, 22 * 26 * 8),
+                   n_neurons=1024,
+                   activation=funs.relu,
+                   activation_deriv=funs.relu_prime),
 
-        if layer == layers[-1]:
-            layer.error = loss
-            layer.delta = layer.error * layer.activation_deriv(layer.output)
+        # Dropout 25%
+        DropoutLayer(input_shape=(1, 1024),
+                     probability=0.25),
 
-            layer.delta_weights += layer.delta * np.atleast_2d(layer.input).T
-            layer.delta_biases += layer.delta
+        # Dense, 4, SoftMax
+        DenseLayer(input_shape=(1, 1024),
+                   n_neurons=4,
+                   activation=funs.softmax,
+                   activation_deriv=funs.softmax_prime)
+    ]
 
-        else:
-            downstream_layer = layers[i + 1]
-            layer.backward_prop(downstream_layer)
+    simple_ll = [
+        # Convolutional, 3x3, 16 filters, ReLU
+        ConvolutionalLayer(input_shape=(208, 176),
+                           n_filters=4,
+                           kernel_shape=(3, 3),
+                           activation=funs.relu,
+                           activation_deriv=funs.relu_prime),
 
-            if i in (0, 1):
-                for delta_ in range(layer.delta.shape[-1]):
-                    plt.imshow(layer.delta[:, :, delta_])
-                    plt.show()
+        # Max Pooling, 2x2
+        MaxPoolingLayer(input_shape=(208, 176, 4)),
+
+        # Flattening to (1, n)
+        FlatteningLayer(input_shape=(104, 88, 4)),
+
+        # Dense, 1024, ReLU
+        DenseLayer(input_shape=(1, 104 * 88 * 4),
+                   n_neurons=1024,
+                   activation=funs.relu,
+                   activation_deriv=funs.relu_prime),
+
+        # Dropout 25%
+        DropoutLayer(input_shape=(1, 1024),
+                     probability=0.25),
+
+        # Dense, 4, SoftMax
+        DenseLayer(input_shape=(1, 1024),
+                   n_neurons=4,
+                   activation=funs.softmax,
+                   activation_deriv=funs.softmax_prime)
+    ]
+
+    cnn = Network()
+
+    for lay in simple_ll:
+        cnn.add(lay)
+
+    cnn.compile()
+
+    prediction = cnn.forward_propagation(img)
+    output_values = np.squeeze(prediction)
+
+    l, e = cnn.cross_entropy_loss(correct_values, output_values)
 
 
-        print(f'Layer {i} delta:\n{layer.delta}')
+
+    print(prediction)
+
