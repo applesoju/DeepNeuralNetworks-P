@@ -1,6 +1,8 @@
 from layers import funs
 import numpy as np
 
+from adam import AdamOptimizer
+
 
 class Network:
     def __init__(self):
@@ -8,11 +10,8 @@ class Network:
         self.layers = []
         self.batch_size = 1
 
-        # Learning rate and momentum
+        # Learning rate and optimizer
         self.learning_rate = 0.01
-        self.momentum = 0.0001
-
-        # Optimizer
         self.optimizer = None
 
         # Loss and accuracy of training and validation sets
@@ -22,8 +21,23 @@ class Network:
         self.validation_loss = {}
         self.validation_accuracy = {}
 
-    def add(self, layer):  # TODO: implement automatic input/output size (shape) determination
+        self.is_compiled = False
+
+    def add(self, layer):
         self.layers.append(layer)
+
+    def compile(self):
+        self.optimizer = AdamOptimizer(self.layers)
+
+        # next_input_shape = None
+
+        # for layer in self.layers:         # TODO: automatic input/output size (shape) determination
+        #     if layer.input_shape is None:
+        #         layer.input_shape = next_input_shape
+        #         layer.get_output_shape()
+        #
+        #     next_input_shape = layer.output
+        self.is_compiled = True
 
     def forward_propagation(self, inputs, training=True):
         next_input = inputs
@@ -63,7 +77,7 @@ class Network:
             # Other output
             else:
                 correct_output = np.float64(correct_output)
-                network_output += 1e-16
+                network_output += 1e-15
 
                 loss = -(np.nan_to_num(correct_output / network_output) -
                          np.nan_to_num((1 - correct_output) / (1 - network_output)))
