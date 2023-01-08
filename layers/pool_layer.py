@@ -61,8 +61,7 @@ class MaxPoolingLayer:
 
                     # Get delta from downstream
                     delta_output = next_layer.delta[r // self.kernel_shape[0],
-                                                    c // self.kernel_shape[1],
-                    f]
+                                                    c // self.kernel_shape[1], f]
 
                     # Get a chunk of the input array and locate his max values
                     chunk = self.input[r: r_end, c: c_end, f]

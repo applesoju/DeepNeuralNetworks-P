@@ -42,8 +42,7 @@ class ConvolutionalLayer:
         self.input = np.atleast_3d(layer_input)
 
         # Apply zero padding
-        self.padded_input[self.padding: -self.padding,
-        self.padding: -self.padding] = self.input
+        self.padded_input[self.padding: -self.padding, self.padding: -self.padding] = self.input
 
         # For each filter in layer
         for f in range(self.n_filters):
