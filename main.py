@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 from layers import funs
 from layers.conv_layer import ConvolutionalLayer
@@ -18,6 +17,9 @@ def dense_forward_test(test_input=None, n=4, act=funs.relu, act_d=funs.relu_prim
                        activation_deriv=act_d)
     test_output = dense.forward_prop(test_input)
 
+
+if __name__ == '__main__':
+    # network_test()
     print(f'Input:\n{test_input}')
     print(f'Weights:\n{dense.weights}')
     print(f'Biases:\n{dense.biases}')
