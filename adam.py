@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class AdamOptimizer:
     def __init__(self, layers, learning_rate=0.01,
                  beta1=0.9, beta2=0.999, training=True):
@@ -34,14 +37,15 @@ class AdamOptimizer:
             self.biases_adam2[i] = 0
 
     def compute_moment(self, beta, layer_index):
+        i = layer_index
         # Beta1
         if beta == self.beta1:
-            weights_moments = beta * self.weights_adam1[layer_index] + (1 - beta) * self.layers.delta_weights
-            biases_moments = beta * self.biases_adam1[layer_index] + (1 - beta) * self.layers.biases
+            weights_moments = beta * self.weights_adam1[i] + (1 - beta) * self.layers[i].delta_weights
+            biases_moments = beta * self.biases_adam1[i] + (1 - beta) * self.layers[i].biases
         # Beta 2
         else:
-            weights_moments = beta * self.weights_adam2[layer_index] + (1 - beta) * (self.layers.delta_weights ** 2)
-            biases_moments = beta * self.biases_adam2[layer_index] + (1 - beta) * (self.layers.biases ** 2)
+            weights_moments = beta * self.weights_adam2[i] + (1 - beta) * (self.layers[i].delta_weights ** 2)
+            biases_moments = beta * self.biases_adam2[i] + (1 - beta) * (self.layers[i].biases ** 2)
 
         return weights_moments, biases_moments
 
