@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-
+from PIL import Image
+import os
 from layers import funs
 from layers.activ_layer import ActivationLayer
 from layers.conv_layer import ConvolutionalLayer
@@ -145,6 +146,32 @@ def network_test():
 
     # print(out)
 
+def resizingScript():
+    base_dir = "images/augumented"
+
+    # Iterate through all subdirectories and files
+    for root, dirs, files in os.walk(base_dir):
+        # Iterate through all files
+        for filename in files:
+            # Check if the file is an image
+            if not filename.endswith('.jpg') and not filename.endswith('.png'):
+                continue
+
+            # Open the image
+            image = Image.open(os.path.join(root, filename))
+
+            # Get the width and height of the image
+            width, height = image.size
+            if not height == 192:
+                # Create a new image with two black lines added to the top and bottom
+                new_image = Image.new('RGB', (width, 192), (0, 0, 0))
+                y = int((192-height)/2)
+                new_image.paste(image, (0, (192-height)))
+
+                # Save the new image with the black lines added
+                new_image.save(os.path.join(root, filename))
+
 
 if __name__ == '__main__':
-    network_test()
+    # network_test()
+    resizingScript()
