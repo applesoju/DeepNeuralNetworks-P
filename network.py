@@ -52,8 +52,8 @@ class Network:
 
         # Categorical Cross Entropy
         else:
-            err = -np.sum((correct_output * np.log(network_output)) +
-                          (1 - correct_output) * np.log(1 - network_output))
+            err = -np.sum((correct_output * np.nan_to_num(np.log(network_output)) +
+                           (1 - correct_output) * np.nan_to_num(np.log(1 - network_output))))
 
             # SoftMax output
             if self.layers[-1].activation == funs.softmax:
