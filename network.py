@@ -57,6 +57,8 @@ class Network:
         return out
 
     def cross_entropy_loss(self, correct_output, network_output):
+        np.errstate(divide='ignore')
+
         # Binary Cross Entropy
         if len(correct_output) == len(network_output) == 1:
             err = -(correct_output * np.log(network_output) +
@@ -123,7 +125,7 @@ class Network:
 
         # If parameters should be updated then use the optimizer and reset gradient values
         if adjust_params:
-            self.optimizer(self.layers)
+            self.optimizer.adam()
             self.reset_gradients()
 
     def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
