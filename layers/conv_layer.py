@@ -7,7 +7,7 @@ class ConvolutionalLayer:
                  activation=linear, activation_deriv=linear_prime):
         # Layer input and its shape
         self.input = None
-        self.input_shape = input_shape if len(input_shape) == 3 else input_shape + (1, )
+        self.input_shape = input_shape if len(input_shape) == 3 else input_shape + (1,)
 
         # Number of filters used in the layer and their shape
         self.n_filters = n_filters
@@ -30,11 +30,11 @@ class ConvolutionalLayer:
         self.activation_deriv = activation_deriv
 
         # Layer output and its shape assuming zero padding and (1, 1) strides
-        self.output_shape = (self.input_shape[0], self.input_shape[1],  n_filters)
+        self.output_shape = (self.input_shape[0], self.input_shape[1], n_filters)
         self.output = np.zeros(self.output_shape)
 
         # Prepare delta variables for backpropagation
-        self.delta = np.zeros(self.output_shape)
+        self.delta = None
         self.delta_weights = np.zeros(self.weights.shape)
         self.delta_biases = np.zeros(self.biases.shape)
 
@@ -43,7 +43,7 @@ class ConvolutionalLayer:
 
         # Apply zero padding
         self.padded_input[self.padding: -self.padding,
-                          self.padding: -self.padding] = self.input
+        self.padding: -self.padding] = self.input
 
         # For each filter in layer
         for f in range(self.n_filters):
@@ -59,7 +59,7 @@ class ConvolutionalLayer:
                     chunk = self.padded_input[r: r_end, c: c_end]
 
                     # Perform convolution
-                    convolution_output = (chunk * self.weights[:, :, :, f]).sum()  + self.biases[f]
+                    convolution_output = (chunk * self.weights[:, :, :, f]).sum() + self.biases[f]
                     self.output[r, c, f] = convolution_output
 
         # Activate outputs
@@ -68,6 +68,8 @@ class ConvolutionalLayer:
         return self.output
 
     def backward_prop(self, next_layer):
+        self.delta = np.zeros(self.output_shape)
+
         # For every filter
         for f in range(self.n_filters):
             # For every row
@@ -83,8 +85,8 @@ class ConvolutionalLayer:
 
                     # Determine delta terms for weights and biases
                     self.delta_weights[:, :, :, f] += chunk * next_layer.delta[r_start, c_start, f]
-                    self.delta[r_start: r, c_start: c] +=\
-                        next_layer.delta[r_start, c_start, f] * self.weights[:, :, :,f]
+                    self.delta[r_start: r, c_start: c] += \
+                        next_layer.delta[r_start, c_start, f] * self.weights[:, :, :, f]
 
             self.delta_biases[f] = np.sum(next_layer.delta[:, :, f])
         self.delta = self.activation_deriv(self.delta)
