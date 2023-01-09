@@ -82,104 +82,99 @@ class Network:
 
         return loss, err
 
-
-def reset_gradients(self):
-    for layer in self.layers:
-        # Reset gradients of weights and biases in layers that have them
-        try:
-            layer.delta_weights = np.zeros(layer.delta_weights.shape)
-            layer.delta_biases = np.zeros(layer.delta_biases.shape)
-
-        except AttributeError:
-            pass
-
-
-def backward_propagation(self, loss, adjust_params):  # TODO: add comments and test
-    for i in reversed(range(len(self.layers))):
-        # Current layer
-        layer = self.layers[i]
-
-        # If it's the output layer set its error and delta terms
-        if layer == self.layers[-1]:
-            layer.error = loss
-            layer.delta = layer.error * layer.activation_deriv(layer.output)
-
-            layer.delta_weights += layer.delta * layer.input.T
-            layer.delta_biases += layer.delta
-
-        # If it's not then backpropagate the error
-        else:
-            next_layer = self.layers[i + 1]
-            layer.backward_prop(next_layer)
-
-        # If parameters should be updated then average out delta weights and biases
-        if adjust_params:
+    def reset_gradients(self):
+        for layer in self.layers:
+            # Reset gradients of weights and biases in layers that have them
             try:
-                layer.delta_weights /= self.batch_size
-                layer.delta_biases /= self.batch_size
+                layer.delta_weights = np.zeros(layer.delta_weights.shape)
+                layer.delta_biases = np.zeros(layer.delta_biases.shape)
 
             except AttributeError:
                 pass
+
+    def backward_propagation(self, loss, adjust_params):  # TODO: add comments and test
+        for i in reversed(range(len(self.layers))):
+            # Current layer
+            layer = self.layers[i]
+
+            # If it's the output layer set its error and delta terms
+            if layer == self.layers[-1]:
+                layer.error = loss
+                layer.delta = layer.error * layer.activation_deriv(layer.output)
+
+                layer.delta_weights += layer.delta * layer.input.T
+                layer.delta_biases += layer.delta
+
+            # If it's not then backpropagate the error
+            else:
+                next_layer = self.layers[i + 1]
+                layer.backward_prop(next_layer)
+
+            # If parameters should be updated then average out delta weights and biases
+            if adjust_params:
+                try:
+                    layer.delta_weights /= self.batch_size
+                    layer.delta_biases /= self.batch_size
+
+                except AttributeError:
+                    pass
 
     # If parameters should be updated then use the optimizer and reset gradient values
     if adjust_params:
         self.optimizer.adam()
         self.reset_gradients()
 
+    def check_for_training(self, inputs, labels):
+        # Model is not compiled
+        if not self.is_compiled:
+            raise ValueError('Model not compiled.')
 
-def check_for_training(self, inputs, labels):
-    # Model is not compiled
-    if not self.is_compiled:
-        raise ValueError('Model not compiled.')
+        # The number of inputs and labels doesn't match
+        if len(inputs) != len(labels):
+            raise ValueError('Lenght of labels and training input is not the same.')
 
-    # The number of inputs and labels doesn't match
-    if len(inputs) != len(labels):
-        raise ValueError('Lenght of labels and training input is not the same.')
+        # The input shape and first layer input shape don't match
+        if inputs[0].shape != self.layers[0].input_shape[0: 2]:
+            insh = inputs[0].shape
+            lash = self.layers[0].input_shape[0: 2]
 
-    # The input shape and first layer input shape don't match
-    if inputs[0].shape != self.layers[0].input_shape[0: 2]:
-        insh = inputs[0].shape
-        lash = self.layers[0].input_shape[0: 2]
+            raise ValueError(f'An input of shape {insh} was given,'
+                             f'while the network expects input in shape {lash}.')
 
-        raise ValueError(f'An input of shape {insh} was given,'
-                         f'while the network expects input in shape {lash}.')
+        # The size of labels and the size of network output don't match
+        if len(np.unique(labels)) != self.layers[-1].n_neurons:
+            lash = labels.shape[-1]
+            nesh = self.layers[-1].n_neurons
 
-    # The size of labels and the size of network output don't match
-    if len(np.unique(labels)) != self.layers[-1].n_neurons:
-        lash = labels.shape[-1]
-        nesh = self.layers[-1].n_neurons
+            raise ValueError(f'A labels vector of shape {lash} was given,'
+                             f'while the network outputs vector in shape {nesh}')
 
-        raise ValueError(f'A labels vector of shape {lash} was given,'
-                         f'while the network outputs vector in shape {nesh}')
+    def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
+        self.check_for_training(inputs, correct_outputs)
 
+        self.epochs = epochs
+        self.batch_size = batch_size
 
-def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
-    self.check_for_training(inputs, correct_outputs)
+    def classify(self, input_for_classification):
+        # Result saving
+        predictions = []
 
-    self.epochs = epochs
-    self.batch_size = batch_size
-
-def classify(self, input_for_classification):
-    # Result saving
-    predictions = []
-
-    # Input is just one object
-    if input_for_classification.shape == self.layers[0].input_shape[0: 2]:
-        predictions.append(
-            self.forward_propagation(input_for_classification,
-                                     training=False)
-        )
-
-    # Input is a list of objects
-    else:
-        for one_input in input_for_classification:
+        # Input is just one object
+        if input_for_classification.shape == self.layers[0].input_shape[0: 2]:
             predictions.append(
-                self.forward_propagation(one_input,
+                self.forward_propagation(input_for_classification,
                                          training=False)
             )
 
-    return np.array(predictions)
+        # Input is a list of objects
+        else:
+            for one_input in input_for_classification:
+                predictions.append(
+                    self.forward_propagation(one_input,
+                                             training=False)
+                )
 
+        return np.array(predictions)
 
-def summary(self):
-    raise NotImplementedError
+    def summary(self):
+        raise NotImplementedError
