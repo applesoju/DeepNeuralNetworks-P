@@ -128,8 +128,32 @@ class Network:
             self.optimizer.adam()
             self.reset_gradients()
 
+    def check_for_training(self, inputs, labels):
+        if not self.is_compiled:
+            raise ValueError('Model not compiled.')
+
+        if len(inputs) != len(labels):
+            raise ValueError('Lenght of labels and training input is not the same.')
+
+        if inputs[0].shape != self.layers[0].input_shape[0: 2]:
+            insh = inputs[0].shape
+            lash = self.layers[0].input_shape[0: 2]
+
+            raise ValueError(f'An input of shape {insh} was given,'
+                             f'while the network expects input in shape {lash}.')
+
+        if labels.shape[-1] != self.layers[-1].n_neurons:
+            lash = labels.shape[-1]
+            nesh = self.layers[-1].n_neurons
+
+            raise ValueError(f'A labels vector of shape {lash} was given,'
+                             f'while the network outputs vector in shape {nesh}')
+
     def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
         raise NotImplementedError
 
     def classify(self, inputs):
+        raise NotImplementedError
+
+    def summary(self):
         raise NotImplementedError
