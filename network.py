@@ -119,10 +119,10 @@ class Network:
                 except AttributeError:
                     pass
 
-    # If parameters should be updated then use the optimizer and reset gradient values
-    if adjust_params:
-        self.optimizer.adam()
-        self.reset_gradients()
+        # If parameters should be updated then use the optimizer and reset gradient values
+        if adjust_params:
+            self.optimizer.adam()
+            self.reset_gradients()
 
     def check_for_training(self, inputs, labels):
         # Model is not compiled
@@ -142,7 +142,7 @@ class Network:
                              f'while the network expects input in shape {lash}.')
 
         # The size of labels and the size of network output don't match
-        if len(np.unique(labels)) != self.layers[-1].n_neurons:
+        if labels.shape[-1] != self.layers[-1].n_neurons:
             lash = labels.shape[-1]
             nesh = self.layers[-1].n_neurons
 
@@ -154,6 +154,86 @@ class Network:
 
         self.epochs = epochs
         self.batch_size = batch_size
+
+        start_time = time.time()
+
+        indices = np.arange(0, len(inputs), dtype=np.int32)
+        if shuffle:
+            np.random.shuffle(indices)
+
+        validation_data_len = int(len(inputs) * validation_split)
+        validation_indices = []
+
+        while len(validation_indices) != validation_data_len:
+            random_index = np.random.randint(0, len(inputs))
+
+            if random_index not in validation_indices:
+                validation_indices.append(random_index)
+
+        validation_indices = np.array(validation_indices)
+        validation_inputs = inputs[validation_indices]
+        validation_labels = correct_outputs[validation_indices]
+
+        indices = np.array([i for i in indices if i not in validation_indices])
+
+        n_batches = int(len(indices) / batch_size)
+        if len(indices) % batch_size != 0:
+            n_batches += 1
+
+        print(f'Total number of images: {len(inputs)}\n'
+              f'Number of training samples: {len(indices)}\n'
+              f'Number of validation saples: {len(validation_indices)}\n'
+              f'Number of batches: {n_batches}\n'
+              f'Size of one batch: {batch_size}')
+
+        batches = np.array_split(indices, n_batches)
+
+        for epoch in range(epochs):
+            errors = []
+
+            for batch_num, batch in enumerate(batches):
+                batch_loss = 0
+                xs, ys = inputs[batch], correct_outputs[batch]
+
+                for x, y in zip(xs, ys):
+                    output = self.forward_propagation(x)
+                    out = np.squeeze(output)
+                    loss, error = self.cross_entropy_loss(correct_output=y, network_output=out)
+
+                    batch_loss += loss
+                    errors.append(error)
+
+                    update = False
+                    if batch_num == batch_size - 1:
+                        update = True
+                        loss = batch_loss / batch_size
+
+                    self.backward_propagation(loss, update)
+
+                print(f'Batch {batch_num} of Epoch {epoch} done.')
+
+            train_output = self.classify(inputs[indices])
+            train_loss, train_error = self.cross_entropy_loss(correct_outputs[indices], train_output)
+
+            validation_output = self.classify(validation_inputs)
+            validation_loss, validation_error = self.cross_entropy_loss(validation_labels, validation_output)
+
+            train_accuracy = train_output.argmax(axis=1) == correct_outputs[indices].argmax(axis=1)
+            validation_accuracy = validation_output.argmax(axis=1) == validation_labels.argmax(axis=1)
+
+            self.training_loss[epoch] = round(train_error.mean(), 4)
+            self.training_accuracy[epoch] = round(train_accuracy.mean() * 100, 4)
+            self.validation_loss[epoch] = round(validation_error.mean(), 4)
+            self.validation_accuracy[epoch] = round(validation_accuracy.mean() * 100, 4)
+
+            print(f'Epoch {epoch}:\n'
+                  f'Time: {round(time.time() - t1, 3)} seconds\n'
+                  f'Train loss: {round(train_error.mean(), 4)}\n'
+                  f'Train accuracy: {round(train_accuracy.mean() * 100, 4)}%\n'
+                  f'Validation loss: {(round(validation_error.mean(), 4))}\n'
+                  f'Validation Accuracy: {round(validation_accuracy.mean() * 100, 4)}%\n')
+
+            start_time = time.time()
 
     def classify(self, input_for_classification):
         # Result saving
