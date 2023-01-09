@@ -9,7 +9,7 @@ from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
 import time
-
+from layers.timer import Timer
 def prepare_data(dir_path_to_data, n_samples=0):
     if not os.path.exists(dir_path_to_data):
         raise FileNotFoundError(f'Directory {dir_path_to_data} does not exist.')
@@ -35,8 +35,11 @@ def prepare_data(dir_path_to_data, n_samples=0):
 
         print(f'Loading images from class {class_name} done in {round(time.time() - start_time, 3)} seconds.')
 
-    label_array = np.array(label_list)
     image_array = np.array(image_list)
+    label_array = np.zeros((len(classes) * n_samples, len(classes)))
+
+    for i, j in enumerate(label_list):
+        label_array[i, j] = 1
 
     return image_array, label_array
 
@@ -109,23 +112,23 @@ if __name__ == '__main__':
 
         # Dense, 1024, ReLU
         DenseLayer(input_shape=(1, 104 * 88 * 4),
-                   n_neurons=1024,
+                   n_neurons=512,
                    activation=funs.relu,
                    activation_deriv=funs.relu_prime),
 
         # Dropout 25%
-        DropoutLayer(input_shape=(1, 1024),
+        DropoutLayer(input_shape=(1, 512),
                      probability=0.25),
 
         # Dense, 4, SoftMax
-        DenseLayer(input_shape=(1, 1024),
+        DenseLayer(input_shape=(1, 512),
                    n_neurons=4,
                    activation=funs.softmax,
                    activation_deriv=funs.softmax_prime)
     ]
 
-    x, y = prepare_data('images/test', 64)
-    layers_list = final_model
+    x, y = prepare_data('images/test', 20)
+    layers_list = simple_ll
 
     cnn = Network()
 
@@ -136,16 +139,13 @@ if __name__ == '__main__':
 
     cnn.train(inputs=x,
               correct_outputs=y,
-              epochs=10,
+              epochs=3,
               batch_size=16,
               shuffle=True,
-              validation_split=0.25)
+              validation_split=0.2)
 
-    prediction = cnn.forward_propagation(img)
-    output_values = np.squeeze(prediction)
+    random_img = cv2.imread('images/test/MildDemented/27.jpg', cv2.IMREAD_GRAYSCALE)
+    result = cnn.classify(random_img)
 
-    l, e = cnn.cross_entropy_loss(correct_values, output_values)
+    print(result)
 
-    cnn.backward_propagation(l, True)
-
-    print(prediction)
