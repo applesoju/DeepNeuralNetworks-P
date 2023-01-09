@@ -152,8 +152,24 @@ class Network:
     def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
         raise NotImplementedError
 
-    def classify(self, inputs):
-        raise NotImplementedError
+    def classify(self, input_for_classification):
+        # Result saving
+        predictions = []
+
+        # Input is just one object
+        if input_for_classification.shape == self.layers[0].input_shape[0: 2]:
+            predictions.append(
+                self.forward_propagation(input_for_classification,
+                                         training=False)
+            )
+
+        # Input is a list of objects
+        else:
+            for one_input in input_for_classification:
+                predictions.append(
+                    self.forward_propagation(one_input,
+                                             training=False)
+                )
 
     def summary(self):
         raise NotImplementedError
