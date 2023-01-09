@@ -67,7 +67,7 @@ class ConvolutionalLayer:
         return self.output
 
     def backward_prop(self, next_layer):
-        self.delta = np.zeros(self.output_shape)
+        self.delta = np.zeros(self.input_shape)
 
         # For every filter
         for f in range(self.n_filters):
@@ -84,8 +84,7 @@ class ConvolutionalLayer:
 
                     # Determine delta terms for weights and biases
                     self.delta_weights[:, :, :, f] += chunk * next_layer.delta[r_start, c_start, f]
-                    self.delta[r_start: r, c_start: c] += \
-                        next_layer.delta[r_start, c_start, f] * self.weights[:, :, :, f]
+                    self.delta[r_start: r, c_start: c] += next_layer.delta[r_start, c_start, f] * self.weights[:, :, :, f]
 
             self.delta_biases[f] = np.sum(next_layer.delta[:, :, f])
         self.delta = self.activation_deriv(self.delta)
