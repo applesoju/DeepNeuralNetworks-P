@@ -8,21 +8,40 @@ from layers.drop_layer import DropoutLayer
 from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
+import time
 
-def prepare_data(dir_path_to_data):
+def prepare_data(dir_path_to_data, n_samples=0):
     if not os.path.exists(dir_path_to_data):
         raise FileNotFoundError(f'Directory {dir_path_to_data} does not exist.')
 
+    # Get directories which correspond to classes
+    classes = next(os.walk(dir_path_to_data))[1]
 
+    label_list = []
+    image_list = []
 
-    return 0, 0
+    for class_index, class_name in enumerate(classes):
+        start_time = time.time()
+        class_dir_path = f'{dir_path_to_data}/{class_name}'
+
+        samples = os.listdir(class_dir_path)[:n_samples] if n_samples > 0 else os.listdir(class_dir_path)
+
+        for file in samples:
+            img_path = f'{class_dir_path}/{file}'
+            img = np.asarray(cv2.imread(img_path, cv2.IMREAD_GRAYSCALE))
+
+            label_list.append(class_index)
+            image_list.append(img)
+
+        print(f'Loading images from class {class_name} done in {round(time.time() - start_time, 3)} seconds.')
+
+    label_array = np.array(label_list)
+    image_array = np.array(image_list)
+
+    return image_array, label_array
 
 
 if __name__ == '__main__':
-    x, y = prepare_data('images/augumented')
-
-    correct_values = np.array([1.0, 0.0, 0.0, 0.0])
-
     final_model = [
         # Convolutional, 7x7, 16 filters, ReLU
         ConvolutionalLayer(input_shape=(208, 176),
@@ -105,6 +124,7 @@ if __name__ == '__main__':
                    activation_deriv=funs.softmax_prime)
     ]
 
+    x, y = prepare_data('images/test', 64)
     layers_list = final_model
 
     cnn = Network()
@@ -114,7 +134,12 @@ if __name__ == '__main__':
 
     cnn.compile()
 
-    cnn.train()
+    cnn.train(inputs=x,
+              correct_outputs=y,
+              epochs=10,
+              batch_size=16,
+              shuffle=True,
+              validation_split=0.25)
 
     prediction = cnn.forward_propagation(img)
     output_values = np.squeeze(prediction)
