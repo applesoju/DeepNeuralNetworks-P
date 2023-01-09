@@ -6,8 +6,11 @@ from adam import AdamOptimizer
 
 class Network:
     def __init__(self):
-        # Layers and batch size
+        # Layers list
         self.layers = []
+
+        # Number of epochs and batch size
+        self.epochs = 1
         self.batch_size = 1
 
         # Learning rate and optimizer
@@ -129,12 +132,15 @@ class Network:
             self.reset_gradients()
 
     def check_for_training(self, inputs, labels):
+        # Model is not compiled
         if not self.is_compiled:
             raise ValueError('Model not compiled.')
 
+        # The number of inputs and labels doesn't match
         if len(inputs) != len(labels):
             raise ValueError('Lenght of labels and training input is not the same.')
 
+        # The input shape and first layer input shape don't match
         if inputs[0].shape != self.layers[0].input_shape[0: 2]:
             insh = inputs[0].shape
             lash = self.layers[0].input_shape[0: 2]
@@ -142,6 +148,7 @@ class Network:
             raise ValueError(f'An input of shape {insh} was given,'
                              f'while the network expects input in shape {lash}.')
 
+        # The size of labels and the size of network output don't match
         if labels.shape[-1] != self.layers[-1].n_neurons:
             lash = labels.shape[-1]
             nesh = self.layers[-1].n_neurons
@@ -150,7 +157,10 @@ class Network:
                              f'while the network outputs vector in shape {nesh}')
 
     def train(self, inputs, correct_outputs, epochs, batch_size, shuffle=False, validation_split=0.2):
-        raise NotImplementedError
+        self.check_for_training(inputs, correct_outputs)
+
+        self.epochs = epochs
+        self.batch_size = batch_size
 
     def classify(self, input_for_classification):
         # Result saving
