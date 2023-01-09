@@ -4,7 +4,6 @@ import numpy as np
 import time
 from adam import AdamOptimizer
 
-
 class Network:
     def __init__(self):
         # Layers list
@@ -44,6 +43,7 @@ class Network:
         self.is_compiled = True
 
     def forward_propagation(self, inputs, training=True):
+
         next_input = inputs
         out = None
 
@@ -61,7 +61,6 @@ class Network:
         return out
 
     def cross_entropy_loss(self, correct_output, network_output):
-        np.errstate(divide='ignore')
 
         # Categorical Cross Entropy
         err = -np.sum((correct_output * np.nan_to_num(np.log(network_output)) +
@@ -195,7 +194,9 @@ class Network:
                 batch_loss = 0
                 xs, ys = inputs[batch], correct_outputs[batch]
 
-                for x, y in zip(xs, ys):
+                for i, xy in enumerate(zip(xs, ys)):
+                    x, y = xy
+
                     output = self.forward_propagation(x)
                     out = np.squeeze(output)
                     loss, error = self.cross_entropy_loss(correct_output=y, network_output=out)
@@ -204,11 +205,9 @@ class Network:
                     errors.append(error)
 
                     update = False
-                    if batch_num == batch_size - 1:
+                    if i == batch_size - 1:
                         update = True
                         loss = batch_loss / batch_size
-
-                    self.backward_propagation(loss, update)
 
                 print(f'Batch {batch_num} of Epoch {epoch} done.')
 
@@ -218,8 +217,8 @@ class Network:
             validation_output = self.classify(validation_inputs)
             validation_loss, validation_error = self.cross_entropy_loss(validation_labels, validation_output)
 
-            train_accuracy = train_output.argmax(axis=1) == correct_outputs[indices].argmax(axis=1)
-            validation_accuracy = validation_output.argmax(axis=1) == validation_labels.argmax(axis=1)
+            train_accuracy = np.squeeze(train_output.argmax(axis=2)) == correct_outputs[indices].argmax(axis=1)
+            validation_accuracy = np.squeeze(validation_output.argmax(axis=2)) == validation_labels.argmax(axis=1)
 
             self.training_loss[epoch] = round(train_error.mean(), 4)
             self.training_accuracy[epoch] = round(train_accuracy.mean() * 100, 4)
@@ -227,7 +226,7 @@ class Network:
             self.validation_accuracy[epoch] = round(validation_accuracy.mean() * 100, 4)
 
             print(f'Epoch {epoch}:\n'
-                  f'Time: {round(time.time() - t1, 3)} seconds\n'
+                  f'Time: {round(time.time() - start_time, 3)} seconds\n'
                   f'Train loss: {round(train_error.mean(), 4)}\n'
                   f'Train accuracy: {round(train_accuracy.mean() * 100, 4)}%\n'
                   f'Validation loss: {(round(validation_error.mean(), 4))}\n'
