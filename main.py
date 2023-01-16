@@ -11,7 +11,6 @@ from network import Network
 import time
 from layers.timer import Timer
 
-
 def prepare_data(dir_path_to_data, n_samples=0):
     if not os.path.exists(dir_path_to_data):
         raise FileNotFoundError(f'Directory {dir_path_to_data} does not exist.')
