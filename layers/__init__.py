@@ -3,4 +3,5 @@ __all__ = ['funs.py',
            'dens_layer',
            'drop_layer',
            'flat_layer',
-           'pool_layer']
+           'pool_layer',
+           'timer']

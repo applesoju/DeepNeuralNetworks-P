@@ -1,8 +1,10 @@
-from layers import funs
+import time
+
 import numpy as np
 
-import time
 from adam import AdamOptimizer
+from layers import funs
+
 
 class Network:
     def __init__(self):
@@ -50,12 +52,14 @@ class Network:
         for layer in self.layers:
             # If a layer is a DropoutLayer then pass training argument
             #   so the neurons will be dropped only during training
+            # lf_timer = Timer()
             if type(layer).__name__ == 'DropoutLayer':
                 out = layer.forward_prop(next_input, training)
 
             else:
                 out = layer.forward_prop(next_input)
-
+            # print(f'{type(layer).__name__} layer forward propagation time:')
+            # lf_timer.stop(True)
             next_input = out
 
         return out

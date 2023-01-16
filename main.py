@@ -1,6 +1,9 @@
+import os
+import time
+
 import cv2
 import numpy as np
-import os
+
 from layers import funs
 from layers.conv_layer import ConvolutionalLayer
 from layers.dens_layer import DenseLayer
@@ -8,8 +11,6 @@ from layers.drop_layer import DropoutLayer
 from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
-import time
-from layers.timer import Timer
 
 def prepare_data(dir_path_to_data, n_samples=0):
     if not os.path.exists(dir_path_to_data):
@@ -149,4 +150,3 @@ if __name__ == '__main__':
     result = cnn.classify(random_img)
 
     print(result)
-
