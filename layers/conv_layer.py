@@ -1,8 +1,7 @@
 import numpy as np
 
 from .funs import linear, linear_prime
-from .timer import Timer
-from .im2col import im2col_indices, col2im_indices
+from .im2col import im2col_indices
 
 
 class ConvolutionalLayer:
@@ -10,18 +9,21 @@ class ConvolutionalLayer:
                  activation=linear, activation_deriv=linear_prime):
         # Layer input and its shape
         self.input = None
-        self.input_shape = input_shape if len(input_shape) == 3 else input_shape + (1, )
+        self.input_shape = input_shape if len(input_shape) == 4 else input_shape + (1, 1)
 
         # Number of filters used in the layer and their shape
         self.n_filters = n_filters
-        self.kernel_shape = (kernel_shape[0], kernel_shape[1], self.input_shape[2], self.n_filters)
+        self.kernel_shape = (self.n_filters,  # Number of filters
+                             self.input_shape[2],  # Number of channels in images
+                             kernel_shape[0],  # Kernel height
+                             kernel_shape[1])  # Kernel width
 
         # Prepare padded input
-        self.padding = self.kernel_shape[0] // 2
-        padded_input_shape = (self.input_shape[0] + 2 * self.padding,
-                              self.input_shape[1] + 2 * self.padding,
-                              self.input_shape[2])
-        self.padded_input = np.zeros(padded_input_shape)
+        self.padding = self.kernel_shape[2] // 2
+        # padded_input_shape = (self.input_shape[0] + 2 * self.padding,     # not needed?
+        #                       self.input_shape[1] + 2 * self.padding,
+        #                       self.input_shape[2])
+        # self.padded_input = np.zeros(padded_input_shape)
 
         # Initialization of filters and biases using normal distribution
         standard_dev = 1 / np.sqrt(np.prod(self.kernel_shape))
@@ -32,9 +34,12 @@ class ConvolutionalLayer:
         self.activation = activation
         self.activation_deriv = activation_deriv
 
-        # Layer output and its shape assuming zero padding and (1, 1) strides
-        self.output_shape = (self.input_shape[0], self.input_shape[1], n_filters)
-        self.output = np.zeros(self.output_shape)
+        # Layer output and its shape assuming (1, 1) strides and padding that won't cause size change
+        self.output_shape = (self.input_shape[0],  # Input height
+                             self.input_shape[1],  # Input width
+                             n_filters,  # Number of filters (channels)
+                             self.input_shape[3])  # Number of inputs
+        self.output = None
 
         # Prepare delta variables for backpropagation
         self.delta = None
@@ -42,62 +47,29 @@ class ConvolutionalLayer:
         self.delta_biases = np.zeros(self.biases.shape)
 
     def forward_prop(self, layer_input):
-        self.input = layer_input.reshape(self.input_shape)
+        h, w, c, n = self.input_shape
 
-        # Apply zero padding
-        self.padded_input[self.padding: -self.padding, self.padding: -self.padding, :] = self.input
-        all_f_timer = Timer()
-        # For each filter in layer
-        for f in range(self.n_filters):
-            # For each row
-            # filter_timer = Timer()
-            for r in range(self.input_shape[0]):
-                r_end = r + self.kernel_shape[0]
+        if len(layer_input.shape) == 2:  # First layer case
+            self.input = layer_input[np.newaxis, np.newaxis, :]
 
-                # For each column
-                for c in range(self.input_shape[1]):
-                    c_end = c + self.kernel_shape[1]
+        else:  # Not first layer case
+            self.input = layer_input
 
-                    # Get a chunk of the padded input array
-                    chunk = self.padded_input[r: r_end, c: c_end]
+        convo_result_shape = self.n_filters, h, w, n
 
-                    # Perform convolution
-                    convolution_output = (chunk * self.weights[:, :, :, f]).sum() + self.biases[f]
-                    self.output[r, c, f] = convolution_output
-            # print('One filter convolution time:')
-            # filter_timer.stop(True)
-        print('All filters timer:')
-        all_f_timer.stop(True)
+        kernel_h = self.kernel_shape[2]  # Kernel height
+        kernel_w = self.kernel_shape[3]  # Kernel width
 
-        # Activate outputs
-        self.output = self.activation(self.output)
+        # Convert images into columns
+        input_col = im2col_indices(self.input, kernel_h, kernel_w, self.padding)
+        weights_col = self.weights.reshape(self.n_filters, -1)
 
-        return self.output
-
-    def faster_forward_prop(self, layer_input):
-        n = 1
-        h, w, c = self.input_shape
-
-        new_input_shape = n, c, h, w
-        new_result_shape = self.n_filters, h, w, n
-        new_output_shape = h, w, self.n_filters, n
-        new_weights = self.weights.transpose(3, 2, 0, 1)
-
-        kernel_h = self.kernel_shape[0]
-        kernel_w = self.kernel_shape[1]
-
-        x = layer_input[np.newaxis, np.newaxis, :]
-
-        input_col = im2col_indices(x, kernel_h, kernel_w, self.padding)
-        weights_col = new_weights.reshape(self.n_filters, -1)
-
+        # Perform convolution
         out = weights_col @ input_col + self.biases[:, np.newaxis]
-        out = out.reshape(new_result_shape).transpose(1, 2, 0, 3)
-
-        self.output = out.reshape(new_output_shape)
+        out = out.reshape(convo_result_shape).transpose(1, 2, 0, 3)
 
         # Activate outputs
-        self.output = self.activation(self.output)
+        self.output = self.activation(out)
 
         return self.output
 
@@ -118,9 +90,9 @@ class ConvolutionalLayer:
                     chunk = self.input[r_start: r, c_start: c]
 
                     # Determine delta terms for weights and biases
-                    self.delta_weights[:, :, :, f] +=\
+                    self.delta_weights[:, :, :, f] += \
                         chunk * next_layer.delta[r_start, c_start, f]
-                    self.delta[r_start: r, c_start: c] +=\
+                    self.delta[r_start: r, c_start: c] += \
                         next_layer.delta[r_start, c_start, f] * self.weights[:, :, :, f]
 
             self.delta_biases[f] = np.sum(next_layer.delta[:, :, f])
