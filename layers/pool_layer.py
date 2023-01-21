@@ -5,6 +5,7 @@ class MaxPoolingLayer:
     def __init__(self, input_shape):
         # Layer input and its size
         self.input = None
+        self.input_reshaped = None
         self.input_shape = input_shape
 
         # Shape of the kernel used in pooling
@@ -22,26 +23,14 @@ class MaxPoolingLayer:
     def forward_prop(self, layer_input):
         self.input = layer_input
 
-        row_range = range(0, self.input_shape[0], self.kernel_shape[0])
-        col_range = range(0, self.input_shape[1], self.kernel_shape[1])
+        h, w, c, n = self.input_shape
+        kernel_h, kernel_w = self.kernel_shape
+        self.input_reshaped = layer_input.transpose(3, 2, 0, 1).reshape(n, c,
+                                                                        h // kernel_h, kernel_h,
+                                                                        w // kernel_w, kernel_w)
 
-        # For each filter in layer
-        for f in range(self.input_shape[2]):
-            # For each row
-            for r in row_range:
-                r_end = r + self.kernel_shape[0]
-
-                # For each column
-                for c in col_range:
-                    c_end = c + self.kernel_shape[1]
-
-                    # Get a chunk of the input array
-                    chunk = self.input[r: r_end, c: c_end, f]
-
-                    # Determine output array indices and perform max-pooling
-                    output_row = r // self.kernel_shape[0]
-                    output_col = c // self.kernel_shape[1]
-                    self.output[output_row, output_col, f] = np.max(chunk)
+        out = self.input_reshaped.max(axis=3).max(axis=4)
+        self.output = out.transpose(2, 3, 1, 0)
 
         return self.output
 
