@@ -1,6 +1,7 @@
 import time
 
 import numpy as np
+import pandas as pd
 
 from adam import AdamOptimizer
 from layers import funs
@@ -32,16 +33,15 @@ class Network:
         self.layers.append(layer)
 
     def compile(self):
+        next_input_shape = None
+
+        for layer in self.layers:
+            if layer.input_shape is None:
+                layer.init_params(next_input_shape)
+
+            next_input_shape = layer.output_shape
+            print(next_input_shape)
         self.optimizer = AdamOptimizer(self.layers)
-
-        # next_input_shape = None
-
-        # for layer in self.layers:         # TODO: automatic input/output size (shape) determination
-        #     if layer.input_shape is None:
-        #         layer.input_shape = next_input_shape
-        #         layer.get_output_shape()
-        #
-        #     next_input_shape = layer.output
         self.is_compiled = True
 
     def forward_propagation(self, inputs, training=True):
@@ -52,14 +52,12 @@ class Network:
         for layer in self.layers:
             # If a layer is a DropoutLayer then pass training argument
             #   so the neurons will be dropped only during training
-            # lf_timer = Timer()
             if type(layer).__name__ == 'DropoutLayer':
                 out = layer.forward_prop(next_input, training)
 
             else:
                 out = layer.forward_prop(next_input)
-            # print(f'{type(layer).__name__} layer forward propagation time:')
-            # lf_timer.stop(True)
+
             next_input = out
 
         return out
@@ -88,12 +86,12 @@ class Network:
     def reset_gradients(self):
         for layer in self.layers:
             # Reset gradients of weights and biases in layers that have them
-            try:
+            if type(layer).__name__ in ['DenseLayer', 'ConvolutionalLayer']:
                 layer.delta_weights = np.zeros(layer.delta_weights.shape)
                 layer.delta_biases = np.zeros(layer.delta_biases.shape)
 
-            except AttributeError:
-                pass
+            if type(layer).__name__ == 'ConvolutionalLayer':
+                layer.col_delta_weights = np.zeros(layer.col_delta_weights.shape)
 
     def backward_propagation(self, loss, adjust_params):  # TODO: add comments and test
         for i in reversed(range(len(self.layers))):
@@ -198,6 +196,8 @@ class Network:
                 batch_loss = 0
                 xs, ys = inputs[batch], correct_outputs[batch]
 
+                # make an exception for ConvolutionalLayers, so they can process whole batch in one go
+                batch_t = time.time()
                 for i, xy in enumerate(zip(xs, ys)):
                     x, y = xy
 
@@ -213,7 +213,10 @@ class Network:
                         update = True
                         loss = batch_loss / batch_size
 
-                print(f'Batch {batch_num} of Epoch {epoch} done.')
+                    self.backward_propagation(loss, update)
+
+                print(f'Batch {batch_num} of Epoch {epoch} done in {round(time.time() - batch_t, 2)}.')
+                batch_t = time.time()
 
             train_output = self.classify(inputs[indices])
             train_loss, train_error = self.cross_entropy_loss(correct_outputs[indices], train_output)
@@ -260,4 +263,41 @@ class Network:
         return np.array(predictions)
 
     def summary(self):
-        raise NotImplementedError
+        # Model is not compiled
+        if not self.is_compiled:
+            raise ValueError('Model needs to be compiled.')
+
+        layer_name = []
+        layer_input = []
+        layer_output = []
+        layer_activation = []
+
+        model_df = None
+
+        for layer in self.layers:
+            layer_name.append(layer.name)
+            layer_input.append(layer.input_shape)
+            layer_output.append(layer.output_shape)
+            try:
+                layer_activation.append(layer.activation.__name__)
+            except AttributeError:
+                layer_activation.append('None')
+
+            model_dict = {
+                'Layer Name': layer_name,
+                'Input': layer_input,
+                'Output': layer_output,
+                'Activation Function': layer_activation
+            }
+            model_df = pd.DataFrame(model_dict).set_index("Layer Name")
+
+        print(model_df)
+
+    def save_to_json(self, path='model.json'):
+        dict_model = {'model': str(type(self).__name__)}
+
+        to_save = ['name', 'n_neurons', 'input_shape', 'output_shape',
+                   'wights', 'biases', 'activation', 'n_filters',
+                   'kernel_shape', 'padding', 'probability']
+
+
