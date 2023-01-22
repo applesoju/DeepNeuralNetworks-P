@@ -1,3 +1,5 @@
+import json
+import os.path
 import time
 
 import numpy as np
@@ -5,6 +7,12 @@ import pandas as pd
 
 from adam import AdamOptimizer
 from layers import funs
+from layers.conv_layer import ConvolutionalLayer
+from layers.pool_layer import MaxPoolingLayer
+from layers.flat_layer import FlatteningLayer
+from layers.drop_layer import DropoutLayer
+from layers.dens_layer import DenseLayer
+from layers.funs import relu, relu_prime, softmax, softmax_prime
 
 
 class Network:
@@ -33,14 +41,26 @@ class Network:
         self.layers.append(layer)
 
     def compile(self):
+        layer_counts = {
+            'ConvolutionalLayer': 0,
+            'MaxPoolingLayer': 0,
+            'FlatteningLayer': 0,
+            'DenseLayer': 0,
+            'DropoutLayer': 0
+        }
         next_input_shape = None
 
         for layer in self.layers:
+            layer_counts[type(layer).__name__] += 1
+
+            if layer_counts[type(layer).__name__] > 1:
+                layer.name += f'-{layer_counts[type(layer).__name__]}'
+
             if layer.input_shape is None:
                 layer.init_params(next_input_shape)
 
             next_input_shape = layer.output_shape
-            print(next_input_shape)
+
         self.optimizer = AdamOptimizer(self.layers)
         self.is_compiled = True
 
@@ -246,7 +266,7 @@ class Network:
         predictions = []
 
         # Input is just one object
-        if input_for_classification.shape == self.layers[0].input_shape[0: 2]:
+        if input_for_classification.shape == tuple(self.layers[0].input_shape[0: 2]):
             predictions.append(
                 self.forward_propagation(input_for_classification,
                                          training=False)
@@ -294,10 +314,108 @@ class Network:
         print(model_df)
 
     def save_to_json(self, path='model.json'):
+        if not os.path.exists('/'.join(path.split('/')[:-1])):
+            raise FileNotFoundError('Given path does not exist')
+
         dict_model = {'model': str(type(self).__name__)}
 
         to_save = ['name', 'n_neurons', 'input_shape', 'output_shape',
-                   'wights', 'biases', 'activation', 'n_filters',
-                   'kernel_shape', 'padding', 'probability']
+                   'weights', 'biases', 'activation', 'activation_deriv', 'n_filters',
+                   'kernel_shape', 'probability']
 
+        for layer in self.layers:
+            current_layer = vars(layer)
 
+            values = {'type': str(type(layer).__name__)}
+            for key, val in current_layer.items():
+                if key in to_save:
+                    if key in ['weights', 'biases']:
+
+                        try:
+                            val = val.tolist()
+                        except:
+                            val = float(val)
+
+                    if type(val) == np.int32:
+                        val = float(val)
+
+                    if key == 'input_shape' or key == 'output_shape':
+                        try:
+                            val = tuple(val)
+                        except:
+                            pass
+                    if key == 'activation' or key == 'activation_deriv':
+                        val = val.__name__
+                    values[key] = val
+            dict_model[layer.name] = values
+
+        json_dict = json.dumps(dict_model)
+
+        with open(path, mode="w") as f:
+            f.write(json_dict)
+        print(f'Model Saved. in {path}')
+
+    def load_from_json(self, path='model.json'):
+        if not os.path.exists(path):
+            raise FileNotFoundError('Given path does not exist')
+
+        models = {'Network': Network}
+        layers = {'ConvolutionalLayer': ConvolutionalLayer,
+                  'MaxPoolingLayer': MaxPoolingLayer,
+                  'FlatteningLayer': FlatteningLayer,
+                  'DenseLayer': DenseLayer,
+                  'DropoutLayer': DropoutLayer}
+        functions = {
+            'relu': relu,
+            'relu_prime': relu_prime,
+            'softmax': softmax,
+            'softmax_prime': softmax_prime
+        }
+
+        with open(path, 'r') as f:
+            dict_model = json.load(f)
+
+            model = dict_model['model']
+            model = models[model]()
+
+            for layer, params in dict_model.items():
+                if layer != 'model':
+                    layer_type = layers[params['type']]
+
+                    if layer_type == ConvolutionalLayer:
+                        lay = layers[params['type']](
+                            input_shape=params['input_shape'],
+                            n_filters=params['n_filters'],
+                            kernel_shape=(params['kernel_shape'][2], params['kernel_shape'][3]),
+                            activation=functions[params['activation']],
+                            activation_deriv=functions[params['activation_deriv']]
+                        )
+                        lay.weights = np.array(params['weights'])
+                        lay.biases = np.array(params['biases'])
+
+                    elif layer_type == MaxPoolingLayer:
+                        lay = layers[params['type']](input_shape=params['input_shape'])
+
+                    elif layer_type == FlatteningLayer:
+                        lay = layers[params['type']](input_shape=params['input_shape'])
+
+                    elif layer_type == DenseLayer:
+                        lay = layers[params['type']](input_shape=(1, params['input_shape']),
+                                                     n_neurons=params['n_neurons'],
+                                                     activation=functions[params['activation']],
+                                                     activation_deriv=functions[params['activation_deriv']])
+                        lay.weights = np.array(params['weights'])
+                        lay.biases = np.array(params['biases'])
+
+                    elif layer_type == DropoutLayer:
+                        lay = layers[params['type']](input_shape=params['input_shape'],
+                                                     probability=params['probability'])
+                        lay.n_neurons = params['n_neurons']
+
+                    else:
+                        raise TypeError('Unknown Layer type detected.')
+
+                    model.add(lay)
+            print(f'Model loaded from {path}')
+
+            return model
