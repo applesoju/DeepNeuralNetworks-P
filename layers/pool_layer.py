@@ -2,14 +2,24 @@ import numpy as np
 
 
 class MaxPoolingLayer:
-    def __init__(self, input_shape):
-        # Layer input and its size
+    def __init__(self, input_shape=None):
         self.input = None
         self.input_reshaped = None
-        self.input_shape = input_shape
+        self.input_shape = None
 
         # Shape of the kernel used in pooling
         self.kernel_shape = (2, 2)
+
+        self.output_shape = None
+        self.output = None
+
+        self.delta = None
+
+        if input_shape is not None:
+            self.init_params(input_shape)
+
+    def init_params(self, input_shape):
+        self.input_shape = input_shape
 
         # Layer output and its size
         self.output_shape = (input_shape[0] // self.kernel_shape[0],
@@ -39,7 +49,7 @@ class MaxPoolingLayer:
 
     def backward_prop(self, next_layer):
         # Reshape and prepare needed arrays
-        delta_nl_reshaped = next_layer.delta.transpose(3, 2, 0, 1)
+        delta_nl_reshaped = next_layer.delta[:, :, :, np.newaxis].transpose(3, 2, 0, 1)
         reshaped_output = self.output.transpose(3, 2, 0, 1)
         reshaped_delta = np.zeros_like(self.input_reshaped)
 

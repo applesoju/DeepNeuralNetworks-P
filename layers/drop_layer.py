@@ -2,22 +2,32 @@ import numpy as np
 
 
 class DropoutLayer:
-    def __init__(self, input_shape, probability):
+    def __init__(self, input_shape=None, probability=0.25):
         # Layer input and its size
         self.input = None
-        self.input_shape = input_shape
+        self.input_shape = None
 
-        # Probability of deactivating a neuron and number of neurons
+        # Probability of deactivating a neuron
         self.probability = probability
-        self.n_neurons = input_shape[1]
+        self.n_neurons = None
 
         # Layer output and the number of neurons in the layer (size of the output)
         self.output = None
-        self.output_shape = input_shape
+        self.output_shape = None
 
         # Prepare error and delta variables for backpropagation
         self.error = None
         self.delta = None
+
+        if input_shape is not None:
+            self.init_params(input_shape)
+
+    def init_params(self, input_shape):
+        self.input_shape = input_shape
+
+        # Number of neurons
+        self.n_neurons = self.input_shape[1]
+        self.output_shape = self.input_shape
 
     def forward_prop(self, layer_input, training=True):
         self.input = layer_input

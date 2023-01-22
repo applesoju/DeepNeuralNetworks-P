@@ -2,17 +2,30 @@ import numpy as np
 
 
 class FlatteningLayer:
-    def __init__(self, input_shape):
+    def __init__(self, input_shape=None):
         # Layer input and its shape
         self.input = None
-        self.input_shape = input_shape
+        self.input_shape = None
 
-        # Layer output
+        # Layer output and its shape
         self.output = None
+        self.output_shape = None
 
         # Prepare error and delta variables for backpropagation
         self.error = None
         self.delta = None
+
+        if input_shape is not None:
+            self.init_params(input_shape)
+
+    def init_params(self, input_shape):
+        self.input_shape = input_shape
+
+        output_shape = 1
+        for i in self.input_shape:
+            output_shape *= i
+
+        self.output_shape = (1, output_shape)
 
     def forward_prop(self, layer_input):
         self.input = layer_input

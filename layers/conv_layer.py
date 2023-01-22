@@ -10,14 +10,39 @@ class ConvolutionalLayer:
         # Layer input and its shape
         self.input = None
         self.input_col = None
-        self.input_shape = input_shape if len(input_shape) == 4 else input_shape + (1, 1)
+        self.input_shape = None
 
         # Number of filters used in the layer and their shape
         self.n_filters = n_filters
+        self.filter_shape = kernel_shape
+        self.kernel_shape = None
+
+        self.padding = None
+
+        self.weights = None
+        self.biases = None
+
+        # Layer activation function and its derivative
+        self.activation = activation
+        self.activation_deriv = activation_deriv
+
+        self.output_shape = None
+        self.output = None
+
+        self.delta = None
+        self.col_delta_weights = None
+        self.delta_weights = None
+        self.delta_biases = None
+
+        if input_shape is not None:
+            self.init_params(input_shape)
+
+    def init_params(self, input_shape):
+        self.input_shape = input_shape if len(input_shape) == 4 else input_shape + (1, 1)
         self.kernel_shape = (self.n_filters,  # Number of filters
                              self.input_shape[2],  # Number of channels in images
-                             kernel_shape[0],  # Kernel height
-                             kernel_shape[1])  # Kernel width
+                             self.filter_shape[0],  # Kernel height
+                             self.filter_shape[1])  # Kernel width
 
         # Prepare padded input
         self.padding = self.kernel_shape[2] // 2
@@ -25,21 +50,15 @@ class ConvolutionalLayer:
         # Initialization of filters and biases using normal distribution
         standard_dev = 1 / np.sqrt(np.prod(self.kernel_shape))
         self.weights = np.random.normal(0, standard_dev, self.kernel_shape)
-        self.biases = np.random.randn(n_filters)
-
-        # Layer activation function and its derivative
-        self.activation = activation
-        self.activation_deriv = activation_deriv
+        self.biases = np.random.randn(self.n_filters)
 
         # Layer output and its shape assuming (1, 1) strides and padding that won't cause size change
         self.output_shape = (self.input_shape[0],  # Input height
                              self.input_shape[1],  # Input width
-                             n_filters,  # Number of filters (channels)
+                             self.n_filters,  # Number of filters (channels)
                              self.input_shape[3])  # Number of inputs
-        self.output = None
 
         # Prepare delta variables for backpropagation
-        self.delta = None
         self.col_delta_weights = np.zeros((self.n_filters, self.kernel_shape[2] * self.kernel_shape[3]))
         self.delta_weights = np.zeros(self.weights.shape)
         self.delta_biases = np.zeros(self.biases.shape)
