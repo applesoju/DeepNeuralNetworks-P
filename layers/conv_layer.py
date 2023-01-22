@@ -34,6 +34,8 @@ class ConvolutionalLayer:
         self.delta_weights = None
         self.delta_biases = None
 
+        self.name = 'Convolutional Layer'
+
         if input_shape is not None:
             self.init_params(input_shape)
 

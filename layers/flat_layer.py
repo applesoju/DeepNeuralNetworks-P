@@ -15,6 +15,8 @@ class FlatteningLayer:
         self.error = None
         self.delta = None
 
+        self.name = 'Flattening Layer'
+
         if input_shape is not None:
             self.init_params(input_shape)
 

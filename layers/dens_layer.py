@@ -26,6 +26,8 @@ class DenseLayer:
         self.delta_weights = None
         self.delta_biases = None
 
+        self.name = 'Dense Layer'
+
         if input_shape is not None:
             self.init_params(input_shape)
 

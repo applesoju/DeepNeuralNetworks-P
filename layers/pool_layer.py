@@ -15,6 +15,8 @@ class MaxPoolingLayer:
 
         self.delta = None
 
+        self.name = 'MaxPooling Layer'
+
         if input_shape is not None:
             self.init_params(input_shape)
 

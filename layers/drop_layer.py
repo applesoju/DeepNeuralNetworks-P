@@ -19,6 +19,8 @@ class DropoutLayer:
         self.error = None
         self.delta = None
 
+        self.name = 'Dropout Layer'
+
         if input_shape is not None:
             self.init_params(input_shape)
 
