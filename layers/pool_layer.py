@@ -26,7 +26,8 @@ class MaxPoolingLayer:
         # Layer output and its size
         self.output_shape = (input_shape[0] // self.kernel_shape[0],
                              input_shape[1] // self.kernel_shape[1],
-                             input_shape[2])
+                             input_shape[2],
+                             input_shape[3])
         self.output = np.zeros(self.output_shape)
 
         # Prepare delta variable for backpropagation
@@ -51,7 +52,12 @@ class MaxPoolingLayer:
 
     def backward_prop(self, next_layer):
         # Reshape and prepare needed arrays
-        delta_nl_reshaped = next_layer.delta[:, :, :, np.newaxis].transpose(3, 2, 0, 1)
+        delta_nl_reshaped = next_layer.delta
+        if len(delta_nl_reshaped.shape) != 4:
+            delta_nl_reshaped = delta_nl_reshaped[:, :, :, np.newaxis]
+
+        delta_nl_reshaped = delta_nl_reshaped.transpose(3, 2, 0, 1)
+
         reshaped_output = self.output.transpose(3, 2, 0, 1)
         reshaped_delta = np.zeros_like(self.input_reshaped)
 

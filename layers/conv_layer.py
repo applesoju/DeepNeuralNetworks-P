@@ -40,7 +40,18 @@ class ConvolutionalLayer:
             self.init_params(input_shape)
 
     def init_params(self, input_shape):
-        self.input_shape = input_shape if len(input_shape) == 4 else input_shape + (1, 1)
+        if len(input_shape) == 4:
+            self.input_shape = input_shape
+
+        elif len(input_shape) == 3:
+            self.input_shape = input_shape + (1, )
+
+        elif len(input_shape) == 2:
+            self.input_shape = input_shape + (1, 1)
+
+        else:
+            raise ValueError('ConvolutionalLayer input must be of dimensions 2, 3 or 4.')
+
         self.kernel_shape = (self.n_filters,  # Number of filters
                              self.input_shape[2],  # Number of channels in images
                              self.filter_shape[0],  # Kernel height
@@ -61,7 +72,8 @@ class ConvolutionalLayer:
                              self.input_shape[3])  # Number of inputs
 
         # Prepare delta variables for backpropagation
-        self.col_delta_weights = np.zeros((self.n_filters, self.kernel_shape[2] * self.kernel_shape[3]))
+        self.col_delta_weights = np.zeros((self.n_filters,
+                                           self.input_shape[2] * self.kernel_shape[2] * self.kernel_shape[3]))
         self.delta_weights = np.zeros(self.weights.shape)
         self.delta_biases = np.zeros(self.biases.shape)
 
@@ -69,18 +81,19 @@ class ConvolutionalLayer:
         h, w, c, n = self.input_shape
 
         if len(layer_input.shape) == 2:  # First layer case
-            self.input = layer_input[np.newaxis, np.newaxis, :]
+            self.input = layer_input[:, :, np.newaxis, np.newaxis]
 
         else:  # Not first layer case
-            self.input = layer_input
+            self.input = layer_input.reshape(self.input_shape)
 
+        input_reshaped = self.input.transpose(3, 2, 0, 1)
         convo_result_shape = self.n_filters, h, w, n
 
         kernel_h = self.kernel_shape[2]  # Kernel height
         kernel_w = self.kernel_shape[3]  # Kernel width
 
         # Convert images into columns
-        self.input_col = im2col_indices(self.input, kernel_h, kernel_w, self.padding)
+        self.input_col = im2col_indices(input_reshaped, kernel_h, kernel_w, self.padding)
         weights_col = self.weights.reshape(self.n_filters, -1)
 
         # Perform convolution
