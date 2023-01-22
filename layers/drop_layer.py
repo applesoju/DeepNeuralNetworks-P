@@ -48,6 +48,7 @@ class DropoutLayer:
         return self.output
 
     def backward_prop(self, next_layer):
+        # Compute error from downstream and determine this layers delta term
         self.error = np.dot(next_layer.weights, next_layer.delta.T).T
         self.delta = self.error * self.output
         self.delta[self.output == 0] = 0

@@ -21,6 +21,7 @@ class FlatteningLayer:
     def init_params(self, input_shape):
         self.input_shape = input_shape
 
+        # Get output shape from shape of input
         output_shape = 1
         for i in self.input_shape:
             output_shape *= i
@@ -28,6 +29,7 @@ class FlatteningLayer:
         self.output_shape = (1, output_shape)
 
     def forward_prop(self, layer_input):
+        # Perform flattening
         self.input = layer_input
         self.output = self.input.flatten().reshape(1, -1)
 
