@@ -35,28 +35,23 @@ class MaxPoolingLayer:
         return self.output
 
     def backward_prop(self, next_layer):
-        row_range = range(0, self.input_shape[0], self.kernel_shape[0])
-        col_range = range(0, self.input_shape[1], self.kernel_shape[1])
+        delta_nl_reshaped = next_layer.delta.transpose(3, 2, 0, 1)
 
-        # For each filter in layer
-        for f in range(self.output_shape[2]):
-            # For each row
-            for r in row_range:
-                r_end = r + self.kernel_shape[0]
+        reshaped_output = self.output.transpose(3, 2, 0, 1)
+        reshaped_delta = np.zeros_like(self.input_reshaped)
 
-                # For each column
-                for c in col_range:
-                    c_end = c + self.kernel_shape[1]
+        out_newaxis = reshaped_output[:, :, :, np.newaxis, :, np.newaxis]
 
-                    # Get delta from downstream
-                    delta_output = next_layer.delta[r // self.kernel_shape[0],
-                                                    c // self.kernel_shape[1], f]
+        mask = (self.input_reshaped == out_newaxis)
 
-                    # Get a chunk of the input array and locate his max values
-                    chunk = self.input[r: r_end, c: c_end, f]
-                    max_value = np.max(chunk)
-                    max_value_indices = np.argwhere(chunk == max_value)
+        delta_nl_newaxis = delta_nl_reshaped[:, :, :, np.newaxis, :, np.newaxis]
+        delta_nl_broadcast, _ = np.broadcast_arrays(delta_nl_newaxis, reshaped_delta)
 
-                    # Save delta values on the same positions as max values
-                    for indices in max_value_indices:
-                        self.delta[r + indices[0], c + indices[1], f] = delta_output
+        reshaped_delta[mask] = delta_nl_broadcast[mask]
+        reshaped_delta /= np.sum(mask, axis=(3, 5), keepdims=True)
+
+        trans_input_shape = self.input.transpose(3, 2, 0, 1).shape
+        self.delta = reshaped_delta.reshape(trans_input_shape)
+        self.delta = self.delta.transpose(2, 3, 1, 0)
+
+    # Source: https://github.com/yunjey/cs231n/
