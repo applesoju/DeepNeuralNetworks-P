@@ -12,6 +12,7 @@ from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
 from network import Network
 
+
 def prepare_data(dir_path_to_data, n_samples=0):
     if not os.path.exists(dir_path_to_data):
         raise FileNotFoundError(f'Directory {dir_path_to_data} does not exist.')
@@ -38,7 +39,11 @@ def prepare_data(dir_path_to_data, n_samples=0):
         print(f'Loading images from class {class_name} done in {round(time.time() - start_time, 3)} seconds.')
 
     image_array = np.array(image_list)
-    label_array = np.zeros((len(classes) * n_samples, len(classes)))
+
+    if n_samples == 0:
+        label_array = np.zeros((len(label_list), len(classes)))
+    else:
+        label_array = np.zeros((n_samples * len(classes), len(classes)))
 
     for i, j in enumerate(label_list):
         label_array[i, j] = 1
@@ -49,88 +54,52 @@ def prepare_data(dir_path_to_data, n_samples=0):
 if __name__ == '__main__':
     final_model = [
         # Convolutional, 7x7, 16 filters, ReLU
-        ConvolutionalLayer(input_shape=(208, 176),
-                           n_filters=16,
+        ConvolutionalLayer(input_shape=(200, 200),
+                           n_filters=32,
                            kernel_shape=(7, 7),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
 
         # Max Pooling, 2x2
-        MaxPoolingLayer(input_shape=(208, 176, 16)),
+        MaxPoolingLayer(),
 
         # Convolutional, 5x5, 16 filters, ReLU
-        ConvolutionalLayer(input_shape=(104, 88, 16),
-                           n_filters=16,
+        ConvolutionalLayer(n_filters=16,
                            kernel_shape=(5, 5),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
 
         # Max Pooling 2x2
-        MaxPoolingLayer(input_shape=(104, 88, 16)),
+        MaxPoolingLayer(),
 
         # Convolutional, 3x3, 8 filters, ReLU
-        ConvolutionalLayer(input_shape=(52, 44, 16),
-                           n_filters=8,
+        ConvolutionalLayer(n_filters=16,
                            kernel_shape=(3, 3),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
 
         # Max Pooling 2x2
-        MaxPoolingLayer(input_shape=(52, 44, 8)),
+        MaxPoolingLayer(),
 
         # Flattening to (1, n)
-        FlatteningLayer(input_shape=(26, 22, 8)),
+        FlatteningLayer(),
 
         # Dense, 1024, ReLU
-        DenseLayer(input_shape=(1, 22 * 26 * 8),
-                   n_neurons=1024,
+        DenseLayer(n_neurons=1024,
                    activation=funs.relu,
                    activation_deriv=funs.relu_prime),
 
         # Dropout 25%
-        DropoutLayer(input_shape=(1, 1024),
-                     probability=0.25),
+        DropoutLayer(probability=0.25),
 
         # Dense, 4, SoftMax
-        DenseLayer(input_shape=(1, 1024),
-                   n_neurons=4,
+        DenseLayer(n_neurons=4,
                    activation=funs.softmax,
                    activation_deriv=funs.softmax_prime)
     ]
 
-    simple_ll = [
-        # Convolutional, 3x3, 16 filters, ReLU
-        ConvolutionalLayer(input_shape=(208, 176),
-                           n_filters=4,
-                           kernel_shape=(3, 3),
-                           activation=funs.relu,
-                           activation_deriv=funs.relu_prime),
-
-        # Max Pooling, 2x2
-        MaxPoolingLayer(input_shape=(208, 176, 4)),
-
-        # Flattening to (1, n)
-        FlatteningLayer(input_shape=(104, 88, 4)),
-
-        # Dense, 1024, ReLU
-        DenseLayer(input_shape=(1, 104 * 88 * 4),
-                   n_neurons=512,
-                   activation=funs.relu,
-                   activation_deriv=funs.relu_prime),
-
-        # Dropout 25%
-        DropoutLayer(input_shape=(1, 512),
-                     probability=0.25),
-
-        # Dense, 4, SoftMax
-        DenseLayer(input_shape=(1, 512),
-                   n_neurons=4,
-                   activation=funs.softmax,
-                   activation_deriv=funs.softmax_prime)
-    ]
-
-    x, y = prepare_data('images/test', 20)
-    layers_list = simple_ll
+    x, y = prepare_data('images/augmented', 50)
+    layers_list = final_model
 
     cnn = Network()
 
@@ -139,14 +108,21 @@ if __name__ == '__main__':
 
     cnn.compile()
 
+    cnn.summary()
+
     cnn.train(inputs=x,
               correct_outputs=y,
-              epochs=3,
-              batch_size=16,
+              epochs=10,
+              batch_size=32,
               shuffle=True,
-              validation_split=0.2)
+              validation_split=0.25)
 
-    random_img = cv2.imread('images/test/MildDemented/27.jpg', cv2.IMREAD_GRAYSCALE)
-    result = cnn.classify(random_img)
-
-    print(result)
+    cnn.save_to_json('models/final.json')
+    # model = cnn.load_from_json('models/test.json')
+    # model.compile()
+    #
+    # img_test = cv2.imread('images/augmented/ModerateDemented/1dabcf64-79b8-4a2f-8e57-c3e9ee1a64cf.jpg',
+    #                       cv2.IMREAD_GRAYSCALE)
+    # result = model.classify(input_for_classification=img_test)
+    #
+    # print([round(i, 2) for i in np.squeeze(result)])
