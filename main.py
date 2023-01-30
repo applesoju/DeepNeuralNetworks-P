@@ -10,7 +10,7 @@ from layers.dens_layer import DenseLayer
 from layers.drop_layer import DropoutLayer
 from layers.flat_layer import FlatteningLayer
 from layers.pool_layer import MaxPoolingLayer
-from network import Network
+from network import Network, load_from_json
 
 
 def prepare_data(dir_path_to_data, n_samples=0):
@@ -52,53 +52,64 @@ def prepare_data(dir_path_to_data, n_samples=0):
 
 
 if __name__ == '__main__':
+
     final_model = [
-        # Convolutional, 7x7, 16 filters, ReLU
+        # Convolutional, 3x3, 8 fiters, ReLU
         ConvolutionalLayer(input_shape=(200, 200),
-                           n_filters=32,
-                           kernel_shape=(7, 7),
+                           n_filters=8,
+                           kernel_shape=(3, 3),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
-
         # Max Pooling, 2x2
         MaxPoolingLayer(),
-
-        # Convolutional, 5x5, 16 filters, ReLU
-        ConvolutionalLayer(n_filters=16,
-                           kernel_shape=(5, 5),
+        # Convolutional, 3x3, 12 filters, ReLU
+        ConvolutionalLayer(n_filters=12,
+                           kernel_shape=(3, 3),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
-
         # Max Pooling 2x2
         MaxPoolingLayer(),
-
-        # Convolutional, 3x3, 8 filters, ReLU
+        # Convolutional, 3x3, 16 filters, ReLU
         ConvolutionalLayer(n_filters=16,
                            kernel_shape=(3, 3),
                            activation=funs.relu,
                            activation_deriv=funs.relu_prime),
-
         # Max Pooling 2x2
         MaxPoolingLayer(),
-
         # Flattening to (1, n)
         FlatteningLayer(),
-
-        # Dense, 1024, ReLU
-        DenseLayer(n_neurons=1024,
+        # Dense, 512, ReLU
+        DenseLayer(n_neurons=512,
                    activation=funs.relu,
                    activation_deriv=funs.relu_prime),
-
         # Dropout 25%
         DropoutLayer(probability=0.25),
-
         # Dense, 4, SoftMax
         DenseLayer(n_neurons=4,
                    activation=funs.softmax,
                    activation_deriv=funs.softmax_prime)
     ]
 
-    x, y = prepare_data('images/augmented', 50)
+    simple_test = [
+        ConvolutionalLayer(input_shape=(200, 200),
+                           n_filters=1,
+                           kernel_shape=(3, 3),
+                           activation=funs.relu,
+                           activation_deriv=funs.relu_prime),
+        MaxPoolingLayer(),
+        FlatteningLayer(),
+        DenseLayer(n_neurons=512,
+                   activation=funs.relu,
+                   activation_deriv=funs.relu_prime),
+        # DropoutLayer(probability=0.25),
+        DenseLayer(n_neurons=4,
+                   activation=funs.softmax,
+                   activation_deriv=funs.softmax_prime),
+    ]
+########################################################################################################################
+    # Model creation, training and saving
+
+    x, y = prepare_data('images/augmented', 1024)
     layers_list = final_model
 
     cnn = Network()
@@ -107,22 +118,45 @@ if __name__ == '__main__':
         cnn.add(lay)
 
     cnn.compile()
-
     cnn.summary()
 
     cnn.train(inputs=x,
               correct_outputs=y,
-              epochs=10,
-              batch_size=32,
-              shuffle=True,
+              epochs=2,
+              batch_size=8,
+              shuffle=False,
               validation_split=0.25)
 
-    cnn.save_to_json('models/final.json')
-    # model = cnn.load_from_json('models/test.json')
-    # model.compile()
+    cnn.save_to_json('models/model_001.json')
+
+########################################################################################################################
+    # Training of loaded model example
+
+    # cnn = load_from_json('models/1024_e12.json')
     #
-    # img_test = cv2.imread('images/augmented/ModerateDemented/1dabcf64-79b8-4a2f-8e57-c3e9ee1a64cf.jpg',
-    #                       cv2.IMREAD_GRAYSCALE)
-    # result = model.classify(input_for_classification=img_test)
+    # cnn.compile()
     #
-    # print([round(i, 2) for i in np.squeeze(result)])
+    # cnn.train(inputs=x,
+    #           correct_outputs=y,
+    #           epochs=3,
+    #           batch_size=64,
+    #           shuffle=False,
+    #           validation_split=0.25)
+    #
+    # cnn.save_to_json('models/1024_e15.json')
+
+########################################################################################################################
+    # Classification example
+
+    # cnn = load_from_json('models/model_001.json')
+    #
+    # test_imgs = [
+    #     cv2.imread('images/augmented/MildDemented/ff951dd6-f361-41d0-b6c4-2de07ab87490.jpg', cv2.IMREAD_GRAYSCALE),
+    #     cv2.imread('images/augmented/ModerateDemented/f41afea6-1e7c-4a4b-b7d2-5eb170fa43b4.jpg', cv2.IMREAD_GRAYSCALE),
+    #     cv2.imread('images/augmented/NonDemented/db3edf65-9f53-4662-90c1-54765ec0d0c1.jpg', cv2.IMREAD_GRAYSCALE),
+    #     cv2.imread('images/augmented/VeryMildDemented/e93ac360-2788-41e2-bfd3-420bdb8654e4.jpg', cv2.IMREAD_GRAYSCALE)
+    # ]
+    #
+    # result = cnn.classify(input_for_classification=test_imgs)
+    #
+    # print([np.round(i, 2) for i in np.squeeze(result)])
