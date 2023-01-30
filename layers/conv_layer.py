@@ -30,7 +30,6 @@ class ConvolutionalLayer:
         self.output = None
 
         self.delta = None
-        self.col_delta_weights = None
         self.delta_weights = None
         self.delta_biases = None
 
@@ -72,8 +71,6 @@ class ConvolutionalLayer:
                              self.input_shape[3])  # Number of inputs
 
         # Prepare delta variables for backpropagation
-        self.col_delta_weights = np.zeros((self.n_filters,
-                                           self.input_shape[2] * self.kernel_shape[2] * self.kernel_shape[3]))
         self.delta_weights = np.zeros(self.weights.shape)
         self.delta_biases = np.zeros(self.biases.shape)
 
@@ -93,7 +90,7 @@ class ConvolutionalLayer:
         kernel_w = self.kernel_shape[3]  # Kernel width
 
         # Convert images into columns
-        self.input_col = im2col_indices(input_reshaped, kernel_h, kernel_w, self.padding)
+        self.input_col = im2col_indices(input_reshaped, kernel_h, kernel_w, padding=self.padding, stride=1)
         weights_col = self.weights.reshape(self.n_filters, -1)
 
         # Perform convolution
@@ -106,6 +103,9 @@ class ConvolutionalLayer:
         return self.output
 
     def backward_prop(self, next_layer):
+        h, w, c, n = self.input_shape
+        shape_for_c2i = n, c, h, w
+
         if len(next_layer.delta.shape) == 3:
             delta_nl = next_layer.delta[:, :, :, np.newaxis]
 
@@ -120,16 +120,16 @@ class ConvolutionalLayer:
         delta_result_shaped = delta_nxt_layer.transpose(1, 2, 3, 0).reshape(self.n_filters, -1)
 
         # Determine delta term of biases
-        self.delta_biases = np.sum(delta_nxt_layer, axis=(0, 2, 3))
+        self.delta_biases += np.sum(delta_nxt_layer, axis=(0, 2, 3))
 
         # Determine delta term of weights
-        self.col_delta_weights += delta_result_shaped @ self.input_col.T
-        self.delta_weights += self.col_delta_weights.reshape(self.weights.shape)
+        col_delta_weights = delta_result_shaped @ self.input_col.T
+        self.delta_weights += col_delta_weights.reshape(self.weights.shape)
 
         # Get weights in needed shape
         weights_reshaped = self.weights.reshape(self.n_filters, -1)
 
         # Determine delta term of inputs
         delta_col = weights_reshaped.T @ delta_result_shaped
-        self.delta = col2im_indices(delta_col, self.input_shape, kernel_h, kernel_w, padding=self.padding)
-        self.delta = self.activation_deriv(self.delta)
+        delta = col2im_indices(delta_col, shape_for_c2i, kernel_h, kernel_w, padding=self.padding)
+        self.delta = self.activation_deriv(delta.transpose(2, 3, 1, 0))
