@@ -10,6 +10,7 @@ class FlatteningLayer:
         # Layer output and its shape
         self.output = None
         self.output_shape = None
+        self.n_neurons = None
 
         # Prepare error and delta variables for backpropagation
         self.error = None
@@ -28,6 +29,7 @@ class FlatteningLayer:
         for i in self.input_shape:
             output_shape *= i
 
+        self.n_neurons = output_shape
         self.output_shape = (1, output_shape)
 
     def forward_prop(self, layer_input):
